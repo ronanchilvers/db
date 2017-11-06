@@ -12,7 +12,7 @@ interface LoaderInterface
     /**
      * Get the meta data array for this loader
      *
-     * @return array
+     * @return array|boolean
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     public function getMetaArray() : array;
