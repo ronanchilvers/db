@@ -14,5 +14,7 @@
             "RonanChilvers\\Db\\": "src/"
         }
     },
-    "require": {}
+    "require": {
+        "symfony/yaml": "^3.4"
+    }
 }
