@@ -1,6 +1,6 @@
 {
     "name": "ronanchilvers/db",
-    "description": "Simple DB layer",
+    "description": "Simple database layer",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -11,7 +11,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "RonanChilvers\\DB\\": "src/"
+            "Ronanchilvers\\Db\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ronanchilvers\\Db\\Test\\": "tests/"
         }
     },
     "require": {},
