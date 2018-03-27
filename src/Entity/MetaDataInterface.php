@@ -1,6 +1,6 @@
 <?php
 
-namespace RonanChilvers\DB\Entity;
+namespace RonanChilvers\Db\Entity;
 
 /**
  * Meta Data objects provide meta data for a given class to data mappers

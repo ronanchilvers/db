@@ -1,6 +1,6 @@
 <?php
 
-namespace RonanChilvers\DB\Storage;
+namespace RonanChilvers\Db\Storage;
 
 /**
  * Storage adapters provide access to storage backends for mapper objects

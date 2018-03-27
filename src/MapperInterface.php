@@ -1,6 +1,6 @@
 <?php
 
-namespace RonanChilvers\DB;
+namespace RonanChilvers\Db;
 
 /**
  * Base interface for repositories

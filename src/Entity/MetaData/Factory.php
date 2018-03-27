@@ -1,8 +1,8 @@
 <?php
 
-namespace RonanChilvers\DB\Entity\MetaData;
+namespace RonanChilvers\Db\Entity\MetaData;
 
-use RonanChilvers\DB\Entity\MetaData\FactoryInterface;
+use RonanChilvers\Db\Entity\MetaData\FactoryInterface;
 
 class Factory implements FactoryInterface
 {

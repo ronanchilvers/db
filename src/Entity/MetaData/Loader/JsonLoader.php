@@ -1,8 +1,8 @@
 <?php
 
-namespace RonanChilvers\DB\Entity\MetaData\Loader;
+namespace RonanChilvers\Db\Entity\MetaData\Loader;
 
-use RonanChilvers\DB\Entity\MetaData\LoaderInterface;
+use RonanChilvers\Db\Entity\MetaData\LoaderInterface;
 use DirectoryIterator;
 
 /**

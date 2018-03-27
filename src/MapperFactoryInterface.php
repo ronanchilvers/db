@@ -1,6 +1,6 @@
 <?php
 
-namespace RonanChilvers\DB;
+namespace RonanChilvers\Db;
 
 use RonanChilvers\DB\MapperInterface;
 

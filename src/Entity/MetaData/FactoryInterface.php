@@ -1,8 +1,8 @@
 <?php
 
-namespace RonanChilvers\DB\Entity\MetaData;
+namespace RonanChilvers\Db\Entity\MetaData;
 
-use RonanChilvers\DB\Entity\MetaDataInterface;
+use RonanChilvers\Db\Entity\MetaDataInterface;
 
 /**
  * Factory for meta data objects that provide information about entities

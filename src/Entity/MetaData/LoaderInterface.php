@@ -1,6 +1,6 @@
 <?php
 
-namespace RonanChilvers\DB\Entity\MetaData;
+namespace RonanChilvers\Db\Entity\MetaData;
 
 /**
  * Interface for meta data loader objects
