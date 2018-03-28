@@ -19,6 +19,8 @@
             "Ronanchilvers\\Db\\Test\\": "tests/"
         }
     },
-    "require": {},
+    "require": {
+        "php": "^7.0"
+    },
     "suggests": {}
 }
