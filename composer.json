@@ -20,7 +20,10 @@
         }
     },
     "require": {
-        "php": "^7.0"
+        "php": "^7.0",
+        "symfony/config": "^3.4"
+    },
+    "require-dev": {
     },
     "suggests": {}
 }
