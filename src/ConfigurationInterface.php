@@ -1,6 +1,6 @@
 <?php
 
-use Ronanchilvers\Db;
+namespace Ronanchilvers\Db;
 
 /**
  * Interface for configuration object

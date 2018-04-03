@@ -21,7 +21,10 @@
     },
     "require": {
         "php": "^7.0",
-        "symfony/config": "^3.4"
+        "aura/sqlschema": "^2.0",
+        "aura/sql": "^2.5",
+        "nette/php-generator": "^3.0",
+        "aura/sqlquery": "^2.7"
     },
     "require-dev": {
     },
