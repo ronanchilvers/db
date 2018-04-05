@@ -4,9 +4,10 @@ namespace Ronanchilvers\Db;
 
 use Aura\SqlQuery\Common\SelectInterface;
 use Aura\SqlQuery\QueryFactory;
+use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Db\Model\Metadata;
-use \PDO;
+use RuntimeException;
 
 /**
  * Class to build model queries and return model instances
@@ -124,14 +125,18 @@ class QueryBuilder
      */
     protected function processSelect(SelectInterface $select)
     {
-        $stmt = $this->pdo->query(
-            $select,
-            PDO::FETCH_ASSOC
+        $stmt = $this->pdo->prepare(
+            $select->getStatement()
         );
+        if (false === $stmt->execute($select->getBindValues())) {
+            throw new RuntimeException(
+                implode(' : ', $stmt->errorInfo())
+            );
+        }
         $class = $this->metadata->class();
         $result = [];
         $hydrator = new Hydrator();
-        foreach ($stmt as $row) {
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $model = new $class();
             $hydrator->hydrate($row, $model);
             $result[] = $model;
