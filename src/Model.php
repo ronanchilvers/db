@@ -222,6 +222,7 @@ class Model
      */
     protected function getData($key)
     {
+        $key = $this->metaData()->prefix($key);
         if (isset($this->data[$key])) {
             return $this->data[$key];
         }
