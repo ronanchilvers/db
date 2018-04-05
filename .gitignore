@@ -1,5 +1,5 @@
+*.sublime-*
 /build/
 /vendor/
-*.sublime-*
-phpunit.xml
 composer.lock
+phpunit.xml
