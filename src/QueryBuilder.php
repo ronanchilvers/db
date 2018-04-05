@@ -4,6 +4,7 @@ namespace Ronanchilvers\Db;
 
 use Aura\SqlQuery\Common\SelectInterface;
 use Aura\SqlQuery\QueryFactory;
+use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Db\Model\Metadata;
 use \PDO;
 
@@ -127,9 +128,13 @@ class QueryBuilder
             $select,
             PDO::FETCH_ASSOC
         );
+        $class = $this->metadata->class();
         $result = [];
+        $hydrator = new Hydrator();
         foreach ($stmt as $row) {
-            $result[] = $row;
+            $model = new $class();
+            $hydrator->hydrate($row, $model);
+            $result[] = $model;
         }
 
         return $result;

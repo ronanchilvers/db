@@ -2,8 +2,12 @@
 
 namespace Ronanchilvers\Db;
 
+use Aura\SqlSchema\ColumnFactory;
 use PDO;
 use Ronanchilvers\Db\Model\Metadata;
+use Ronanchilvers\Db\Schema\SchemaFactory;
+use Ronanchilvers\Utility\Str;
+use RuntimeException;
 
 /**
  * Base model class for all models
@@ -18,6 +22,11 @@ class Model
      * @var \PDO
      */
     static private $pdo;
+
+    /**
+     * @var array
+     */
+    static protected $modelFields = [];
 
     /**
      * Set the PDO instance to use for models
@@ -54,9 +63,49 @@ class Model
     }
 
     /**
+     * Boot a given model class
+     *
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    static protected function columns(MetaData $metaData)
+    {
+        $class = $metaData->class();
+        if (isset(static::$modelFields[$class])) {
+            return static::$modelFields[$class];
+        }
+        $schemaFactory = new SchemaFactory();
+        $schema = $schemaFactory->factory(
+            static::pdo()
+        );
+        $dbColumns = $schema->fetchTableCols(
+            $metaData->table()
+        );
+        $columns = [];
+        foreach ($dbColumns as $col) {
+            $columns[$col->name] = [
+                'type'   => $col->type,
+                'length' => $col->size,
+            ];
+        }
+        static::$modelFields[$class] = $columns;
+
+        return $columns;
+    }
+
+    /**
      * @var string
      */
     protected $metaDataClass = Metadata::class;
+
+    /**
+     * @var Ronanchilvers\Db\Model\Metadata
+     */
+    protected $metadata = null;
+
+    /**
+     * @var array
+     */
+    protected $fields = [];
 
     /**
      * @var array
@@ -64,13 +113,42 @@ class Model
     protected $data = [];
 
     /**
+     * @var boolean
+     */
+    protected $disableAutoGetSet = false;
+
+    /**
      * Class constructor
      *
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function __construct($data = [])
+    public function __construct()
     {
-        $this->data = $data;
+        $this->boot();
+    }
+
+    public function __call($method, $args)
+    {
+        if (false === $this->disableAutoGetSet && (0 === strpos($method, 'get') || 0 === strpos($method, 'set'))) {
+            $attribute = Str::snake(mb_substr($method, 3));
+            switch (substr($method, 0, 3)) {
+                case 'set':
+                    $this->setData($attribute, $args[0]);
+                    return;
+
+                case 'get':
+                    return $this->getData($attribute);
+            }
+        }
+
+        trigger_error(
+            sprintf(
+                'Call to undefined method %s::%s()',
+                get_called_class(),
+                $method
+            ),
+            E_USER_ERROR
+        );
     }
 
     /**
@@ -79,11 +157,14 @@ class Model
      * @return Ronanchilvers\Db\Model\Metadata
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function newMetaData()
+    public function metaData()
     {
         $class = $this->metaDataClass;
+        if (!$this->metadata instanceof $class) {
+            $this->metadata = new $class($this);
+        }
 
-        return new $class($this);
+        return $this->metadata;
     }
 
     /**
@@ -96,7 +177,55 @@ class Model
     {
         return new QueryBuilder(
             static::pdo(),
-            $this->newMetaData()
+            $this->metaData()
         );
+    }
+
+    /**
+     * Boot this model if its not already booted
+     *
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function boot()
+    {
+        if (false === $this->disableAutoGetSet) {
+            $this->fields = static::columns(
+                $this->metaData()
+            );
+        }
+    }
+
+    /**
+     * Set a data attribute on this model
+     *
+     * @param string $key
+     * @param mixed $value
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function setData($key, $value)
+    {
+        $key = $this->metaData()->prefix($key);
+        if (!isset($this->fields[$key])) {
+            throw new RuntimeException(
+                sprintf('Unknown field %s', $key)
+            );
+        }
+        $this->data[$key] = $value;
+    }
+
+    /**
+     * Get a data attribute for this model
+     *
+     * @param string $key
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function getData($key)
+    {
+        if (isset($this->data[$key])) {
+            return $this->data[$key];
+        }
+
+        return null;
     }
 }

@@ -66,18 +66,37 @@ class Metadata
     }
 
     /**
-     * Get the field prefix for this table
+     * Prefix a string with the configured field prefix
      *
+     * @param  string $string
      * @return string
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function fieldPrefix()
+    public function prefix($string)
     {
-        if (!is_null($this->fieldPrefix)) {
-            return $this->fieldPrefix . '_';
+        $prefix = $this->fieldPrefix;
+        if (0 === strpos($string, $prefix)) {
+            return $string;
         }
 
-        return '';
+        return "{$prefix}_{$string}";
+    }
+
+    /**
+     * Un-prefix a string with the configured field prefix
+     *
+     * @param string $string
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function unprefix($string)
+    {
+        $prefix = $this->fieldPrefix;
+        if (0 === strpos($string, $prefix)) {
+            return substr($string, 0, strlen($prefix) + 1);
+        }
+
+        return $string;
     }
 
     /**
