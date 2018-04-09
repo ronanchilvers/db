@@ -127,6 +127,16 @@ class Model
         $this->boot();
     }
 
+    public function __get($var)
+    {
+        return $this->getData($var);
+    }
+
+    public function __set($var, $value)
+    {
+        $this->setData($var, $value);
+    }
+
     public function __call($method, $args)
     {
         if (false === $this->disableAutoGetSet && (0 === strpos($method, 'get') || 0 === strpos($method, 'set'))) {
