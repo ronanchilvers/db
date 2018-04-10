@@ -22,9 +22,7 @@
     "require": {
         "php": "^7.0",
         "aura/sqlschema": "^2.0",
-        "aura/sql": "^2.5",
         "nette/php-generator": "^3.0",
-        "aura/sqlquery": "^2.7",
         "ronanchilvers/utility": "dev-master",
         "clancats/hydrahon": "^1.1"
     },
