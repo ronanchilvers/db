@@ -25,7 +25,8 @@
         "aura/sql": "^2.5",
         "nette/php-generator": "^3.0",
         "aura/sqlquery": "^2.7",
-        "ronanchilvers/utility": "dev-master"
+        "ronanchilvers/utility": "dev-master",
+        "clancats/hydrahon": "^1.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^6.0"

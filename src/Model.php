@@ -29,6 +29,29 @@ class Model
     static protected $modelFields = [];
 
     /**
+     * Magic call for static methods
+     *
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    static public function __callStatic($method, $args)
+    {
+        $builder = (new static)->newQueryBuilder();
+        if (method_exists($builder, $method)) {
+            return call_user_func_array([$builder, $method], $args);
+        }
+
+        trigger_error(
+            sprintf(
+                'Call to undefined method %s::%s()',
+                get_called_class(),
+                $method
+            ),
+            E_USER_ERROR
+        );
+    }
+
+    /**
      * Set the PDO instance to use for models
      *
      * @param \PDO $pdo
@@ -48,18 +71,6 @@ class Model
     static protected function pdo()
     {
         return self::$pdo;
-    }
-
-    /**
-     *
-     *
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    static public function select()
-    {
-        return (new static)
-            ->newQueryBuilder()
-            ->select();
     }
 
     /**

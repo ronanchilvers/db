@@ -2,8 +2,6 @@
 
 namespace Ronanchilvers\Db;
 
-use Aura\SqlQuery\Common\SelectInterface;
-use Aura\SqlQuery\QueryFactory;
 use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Db\Model\Metadata;
@@ -22,11 +20,6 @@ class QueryBuilder
     protected $pdo;
 
     /**
-     * @var QueryFactory
-     */
-    protected $queryFactory;
-
-    /**
      * @var Aura\SqlQuery\QueryInterface
      */
     protected $query;
@@ -42,7 +35,7 @@ class QueryBuilder
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     public function __construct(
-        $pdo,
+        PDO $pdo,
         $metadata
     ) {
         $this->pdo = $pdo;
@@ -76,59 +69,53 @@ class QueryBuilder
     }
 
     /**
-     * Get a select query
-     *
-     * @return Aura\SqlQuery\Common\SelectInterface
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    public function select()
-    {
-        if (is_null($this->query)) {
-            $this->query = $this->queryFactory()
-                ->newSelect()
-                ->cols(['*'])
-                ->from(
-                    $this->metadata->table()
-                )
-                ;
-        }
-
-        return $this;
-    }
-
-    /**
      * Get all records
-     *
      *
      * @return array
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function execute()
+    public function all()
     {
-        switch (1) {
+        return $this->select()->get();
+    }
 
-            case $this->query instanceof SelectInterface:
-                return $this->processSelect($this->query);
+    /**
+     * Start a query
+     *
+     * @return \ClanCats\Hydrahon\BaseQuery
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function select()
+    {
+        $builder = new \ClanCats\Hydrahon\Builder('mysql', function ($query, $string, $params) {
+            return $this->processSelect(
+                $string,
+                $params
+            );
+        });
 
-            default:
-                throw new \Exception('Unsupported query type');
+        $select = $builder->select();
+        $select->table(
+            $this->metadata->table()
+        );
 
-        }
+        return $select;
     }
 
     /**
      * Process a select query into a collection
      *
-     * @param Aura\SqlQuery\Common\SelectInterface
+     * @param string $sql
+     * @param array $params
      * @return Collection
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function processSelect(SelectInterface $select)
+    protected function processSelect($sql, $params)
     {
         $stmt = $this->pdo->prepare(
-            $select->getStatement()
+            $sql
         );
-        if (false === $stmt->execute($select->getBindValues())) {
+        if (false === $stmt->execute($params)) {
             throw new RuntimeException(
                 implode(' : ', $stmt->errorInfo())
             );
@@ -143,21 +130,5 @@ class QueryBuilder
         }
 
         return $result;
-    }
-
-    /**
-     *
-     *
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    protected function queryFactory()
-    {
-        if (!$this->queryFactory instanceof QueryFactory) {
-            $this->queryFactory = new QueryFactory(
-                $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME)
-            );
-        }
-
-        return $this->queryFactory;
     }
 }
