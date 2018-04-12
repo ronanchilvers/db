@@ -5,6 +5,7 @@ namespace Ronanchilvers\Db;
 use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Db\Model\Metadata;
+use Ronanchilvers\Utility\Collection;
 use RuntimeException;
 
 /**
@@ -88,10 +89,14 @@ class QueryBuilder
     public function select()
     {
         $builder = new \ClanCats\Hydrahon\Builder('mysql', function ($query, $string, $params) {
-            return $this->processSelect(
+            $result = $this->processSelect(
                 $string,
                 $params
             );
+            // @TODO Remove var_dump
+            var_dump($result);
+
+            return $result;
         });
 
         $select = $builder->select();
@@ -129,6 +134,6 @@ class QueryBuilder
             $result[] = $model;
         }
 
-        return $result;
+        return new Collection($result);
     }
 }
