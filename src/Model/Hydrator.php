@@ -29,7 +29,7 @@ class Hydrator extends Model
     public function hydrate(array $data, Model $model)
     {
         foreach ($data as $key => $value) {
-            $model->setData($key, $value);
+            $model->data[$key] = $value;
         }
     }
 

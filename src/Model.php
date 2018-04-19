@@ -26,6 +26,11 @@ class Model
     /**
      * @var array
      */
+    static protected $primaryKeys = [];
+
+    /**
+     * @var array
+     */
     static protected $modelFields = [];
 
     /**
@@ -74,36 +79,6 @@ class Model
     }
 
     /**
-     * Boot a given model class
-     *
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    static protected function columns(MetaData $metaData)
-    {
-        $class = $metaData->class();
-        if (isset(static::$modelFields[$class])) {
-            return static::$modelFields[$class];
-        }
-        $schemaFactory = new SchemaFactory();
-        $schema = $schemaFactory->factory(
-            static::pdo()
-        );
-        $dbColumns = $schema->fetchTableCols(
-            $metaData->table()
-        );
-        $columns = [];
-        foreach ($dbColumns as $col) {
-            $columns[$col->name] = [
-                'type'   => $col->type,
-                'length' => $col->size,
-            ];
-        }
-        static::$modelFields[$class] = $columns;
-
-        return $columns;
-    }
-
-    /**
      * @var string
      */
     protected $metaDataClass = Metadata::class;
@@ -112,11 +87,6 @@ class Model
      * @var Ronanchilvers\Db\Model\Metadata
      */
     protected $metadata = null;
-
-    /**
-     * @var array
-     */
-    protected $fields = [];
 
     /**
      * @var array
@@ -134,19 +104,7 @@ class Model
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     public function __construct()
-    {
-        $this->boot();
-    }
-
-    public function __get($var)
-    {
-        return $this->getData($var);
-    }
-
-    public function __set($var, $value)
-    {
-        $this->setData($var, $value);
-    }
+    {}
 
     public function __call($method, $args)
     {
@@ -154,8 +112,7 @@ class Model
             $attribute = Str::snake(mb_substr($method, 3));
             switch (substr($method, 0, 3)) {
                 case 'set':
-                    $this->setData($attribute, $args[0]);
-                    return;
+                    return $this->setData($attribute, $args[0]);
 
                 case 'get':
                     return $this->getData($attribute);
@@ -182,7 +139,10 @@ class Model
     {
         $class = $this->metaDataClass;
         if (!$this->metadata instanceof $class) {
-            $this->metadata = new $class($this);
+            $this->metadata = new $class(
+                static::pdo(),
+                $this
+            );
         }
 
         return $this->metadata;
@@ -203,17 +163,83 @@ class Model
     }
 
     /**
-     * Boot this model if its not already booted
+     * Save this model
      *
+     * This method either inserts or updates the model row based on the presence
+     * of an ID. It will return false if the save fails.
+     *
+     * @return boolean
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function boot()
+    public function save()
     {
-        if (false === $this->disableAutoGetSet) {
-            $this->fields = static::columns(
-                $this->metaData()
+        $metaData     = $this->metaData();
+        $pKey         = $metaData->primaryKey();
+        $data         = $this->data;
+        $queryBuilder = $this->newQueryBuilder();
+        if (true === isset($data[$pKey])) {
+            // Update
+            $query = $queryBuilder->update();
+            $id = $data[$pKey];
+            unset($data[$pKey]);
+            $query
+                ->set(
+                    $this->data
+                )
+                ->where(
+                    $pKey,
+                    '=',
+                    $id
+                );
+
+            return $query->execute();
+        } else {
+            // Insert
+            $query = $queryBuilder->insert();
+            $query->values(
+                $this->data
+            );
+
+            if (true !== $query->execute()) {
+                return false;
+            }
+            $this->data[$pKey] = static::pdo()->lastInsertId();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete this model record
+     *
+     * @return boolean
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function delete()
+    {
+        $metaData     = $this->metaData();
+        $pKey         = $metaData->primaryKey();
+        if (!isset($this->data[$pKey]) || empty($this->data[$pKey])) {
+            throw new RuntimeException(
+                sprintf('Unable to delete model without primary key', $key)
             );
         }
+        $query = $this->newQueryBuilder()
+            ->delete()
+            ->where(
+                $pKey,
+                '=',
+                $this->data[$pKey]
+            )
+            ;
+        if (false === $query->execute()) {
+            return false;
+        }
+        unset($this->data[$pKey]);
+
+        return true;
     }
 
     /**
@@ -221,17 +247,25 @@ class Model
      *
      * @param string $key
      * @param mixed $value
+     * @return static
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     protected function setData($key, $value)
     {
         $key = $this->metaData()->prefix($key);
-        if (!isset($this->fields[$key])) {
+        if (!$this->metaData()->hasColumn($key)) {
             throw new RuntimeException(
                 sprintf('Unknown field %s', $key)
             );
         }
+        if ($this->metaData()->primaryKey() == $key) {
+            throw new RuntimeException(
+                sprintf('Invalid attempt to overwrite primary key column %s', $key)
+            );
+        }
         $this->data[$key] = $value;
+
+        return $this;
     }
 
     /**

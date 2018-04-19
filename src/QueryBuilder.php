@@ -2,6 +2,11 @@
 
 namespace Ronanchilvers\Db;
 
+use ClanCats\Hydrahon\Builder;
+use ClanCats\Hydrahon\Query\Sql\FetchableInterface;
+use ClanCats\Hydrahon\Query\Sql\Insert;
+use ClanCats\Hydrahon\Query\Sql\Select;
+use ClanCats\Hydrahon\Query\Sql\Update;
 use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Db\Model\Metadata;
@@ -19,11 +24,6 @@ class QueryBuilder
      * @var \PDO
      */
     protected $pdo;
-
-    /**
-     * @var Aura\SqlQuery\QueryInterface
-     */
-    protected $query;
 
     /**
      * @var Ronanchilvers\Db\Model\Metadata
@@ -45,31 +45,6 @@ class QueryBuilder
     }
 
     /**
-     * Magic call method to allow access to the stored query object
-     *
-     * @param string $method
-     * @param array $args
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    public function __call($method, $args)
-    {
-        if (method_exists($this->query, $method)) {
-            call_user_func_array([$this->query, $method], $args);
-
-            return $this;
-        }
-
-        trigger_error(
-            sprintf(
-                'Call to undefined method %s::%s()',
-                get_called_class(),
-                $method
-            ),
-            E_USER_ERROR
-        );
-    }
-
-    /**
      * Get all records
      *
      * @return array
@@ -81,23 +56,14 @@ class QueryBuilder
     }
 
     /**
-     * Start a query
+     * Create a select object
      *
-     * @return \ClanCats\Hydrahon\BaseQuery
+     * @return \ClanCats\Hydrahon\Query\Sql\Select
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     public function select()
     {
-        $builder = new \ClanCats\Hydrahon\Builder('mysql', function ($query, $string, $params) {
-            $result = $this->processSelect(
-                $string,
-                $params
-            );
-            // @TODO Remove var_dump
-            var_dump($result);
-
-            return $result;
-        });
+        $builder = $this->newBuilder();
 
         $select = $builder->select();
         $select->table(
@@ -108,32 +74,94 @@ class QueryBuilder
     }
 
     /**
-     * Process a select query into a collection
+     * Create an insert query
      *
-     * @param string $sql
-     * @param array $params
-     * @return Collection
+     * @return \ClanCats\Hydrahon\Query\Sql\Insert
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function processSelect($sql, $params)
+    public function insert()
     {
-        $stmt = $this->pdo->prepare(
-            $sql
-        );
-        if (false === $stmt->execute($params)) {
-            throw new RuntimeException(
-                implode(' : ', $stmt->errorInfo())
-            );
-        }
-        $class = $this->metadata->class();
-        $result = [];
-        $hydrator = new Hydrator();
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $model = new $class();
-            $hydrator->hydrate($row, $model);
-            $result[] = $model;
-        }
+        $builder = $this->newBuilder();
 
-        return new Collection($result);
+        return $builder
+            ->table($this->metadata->table())
+            ->insert();
+    }
+
+    /**
+     * Create an update query
+     *
+     * @return \ClanCats\Hydrahon\Query\Sql\Update
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function update()
+    {
+        $builder = $this->newBuilder();
+
+        return $builder
+            ->table($this->metadata->table())
+            ->update();
+    }
+
+    /**
+     * Get a delete query
+     *
+     * @return ClanCats\Hydrahon\Query\Sql\Delete
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function delete()
+    {
+        return $this
+            ->newBuilder()
+            ->table($this->metadata->table())
+            ->delete();
+    }
+
+    /**
+     * Create a hydrahon query builder
+     *
+     * @return \ClanCats\Hydrahon\Builder
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function newBuilder()
+    {
+        return new \ClanCats\Hydrahon\Builder(
+            'mysql',
+            $this->generateCallback()
+        );
+    }
+
+    /**
+     * Generate a PDO callback
+     *
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function generateCallback()
+    {
+        return function ($query, $sql, $params) {
+            $stmt = $this->pdo->prepare(
+                $sql
+            );
+            $result = $stmt->execute($params);
+            if (false === $result) {
+                throw new RuntimeException(
+                    implode(' : ', $stmt->errorInfo())
+                );
+            }
+            if (!$query instanceof FetchableInterface) {
+                return $result;
+            }
+
+            $class = $this->metadata->class();
+            $result = [];
+            $hydrator = new Hydrator();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $model = new $class();
+                $hydrator->hydrate($row, $model);
+                $result[] = $model;
+            }
+
+            return $result;
+        };
     }
 }

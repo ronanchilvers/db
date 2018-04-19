@@ -2,7 +2,9 @@
 
 namespace Ronanchilvers\Db\Model;
 
+use PDO;
 use Ronanchilvers\Db\Model;
+use Ronanchilvers\Db\Schema\SchemaFactory;
 
 /**
  * Class responsible for providing model meta data such as table names
@@ -12,9 +14,24 @@ use Ronanchilvers\Db\Model;
 class Metadata
 {
     /**
+     * @var PDO
+     */
+    protected $pdo;
+
+    /**
+     * @var array
+     */
+    protected $columns = null;
+
+    /**
+     * @var string
+     */
+    protected $primaryKey = null;
+
+    /**
      * @var Ronanchilvers\Db\Model
      */
-    protected $model;
+    protected $model = null;
 
     /**
      * @var string
@@ -32,8 +49,9 @@ class Metadata
      * @param Model $model
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function __construct(Model $model)
+    public function __construct(PDO $pdo, Model $model)
     {
+        $this->pdo = $pdo;
         $this->model = $model;
     }
 
@@ -63,6 +81,70 @@ class Metadata
         }
 
         return $this->table;
+    }
+
+    /**
+     * Get the primary key column name
+     *
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function primaryKey()
+    {
+        if (is_null($this->primaryKey)) {
+            foreach ($this->columns() as $column => $data) {
+                if (true === $data['primary']) {
+                    $this->primaryKey = $column;
+                    break;
+                }
+            }
+        }
+
+        return $this->primaryKey;
+    }
+
+    /**
+     * Get the column data for this model
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function columns()
+    {
+        if (is_null($this->columns)) {
+            $class = $this->class();
+            $schemaFactory = new SchemaFactory();
+            $schema = $schemaFactory->factory(
+                $this->pdo
+            );
+            $dbColumns = $schema->fetchTableCols(
+                $this->table()
+            );
+            $columns = [];
+            foreach ($dbColumns as $col) {
+                $columns[$col->name] = [
+                    'primary'=> $col->primary,
+                    'type'   => $col->type,
+                    'length' => $col->size,
+                ];
+            }
+            $this->columns = $columns;
+        }
+
+        return $this->columns;
+    }
+
+    /**
+     * Check if a column exists
+     *
+     * @return boolean
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function hasColumn($name)
+    {
+        $columns = $this->columns();
+
+        return isset($columns[$name]);
     }
 
     /**
