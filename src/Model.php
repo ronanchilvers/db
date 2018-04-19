@@ -2,10 +2,8 @@
 
 namespace Ronanchilvers\Db;
 
-use Aura\SqlSchema\ColumnFactory;
 use PDO;
 use Ronanchilvers\Db\Model\Metadata;
-use Ronanchilvers\Db\Schema\SchemaFactory;
 use Ronanchilvers\Utility\Str;
 use RuntimeException;
 
