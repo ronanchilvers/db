@@ -5,6 +5,7 @@ namespace Ronanchilvers\Db\Model;
 use PDO;
 use Ronanchilvers\Db\Model;
 use Ronanchilvers\Db\Schema\SchemaFactory;
+use Ronanchilvers\Utility\Str;
 
 /**
  * Class responsible for providing model meta data such as table names
@@ -75,8 +76,11 @@ class Metadata
     public function table()
     {
         if (is_null($this->table)) {
+            $class = explode('\\', get_class($this->model));
+            $class = array_pop($class);
+
             $this->table = $this->transformTableName(
-                get_class($this->model)
+                Str::snake($class)
             );
         }
 
