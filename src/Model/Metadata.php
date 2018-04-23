@@ -20,6 +20,11 @@ class Metadata
     protected $pdo;
 
     /**
+     * @var Ronanchilvers\Db\Schema\SchemaFactory
+     */
+    protected $schemaFactory = null;
+
+    /**
      * @var array
      */
     protected $columns = null;
@@ -47,13 +52,19 @@ class Metadata
     /**
      * Class constructor
      *
-     * @param Model $model
+     * @param \PDO $pdo
+     * @param \Ronanchilvers\Db\Model $model
+     * @param \Ronanchilvers\Db\Schema\SchemaFactory $schemaFactory
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function __construct(PDO $pdo, Model $model)
-    {
+    public function __construct(
+        PDO $pdo,
+        Model $model,
+        SchemaFactory $schemaFactory = null
+    ) {
         $this->pdo = $pdo;
         $this->model = $model;
+        $this->schemaFactory = $schemaFactory;
     }
 
     /**
@@ -117,7 +128,10 @@ class Metadata
     {
         if (is_null($this->columns)) {
             $class = $this->class();
-            $schemaFactory = new SchemaFactory();
+            $schemaFactory = $this->schemaFactory;
+            if (!$schemaFactory instanceof SchemaFactory) {
+                $schemaFactory = new SchemaFactory();
+            }
             $schema = $schemaFactory->factory(
                 $this->pdo
             );
