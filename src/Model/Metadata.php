@@ -128,11 +128,7 @@ class Metadata
     {
         if (is_null($this->columns)) {
             $class = $this->class();
-            $schemaFactory = $this->schemaFactory;
-            if (!$schemaFactory instanceof SchemaFactory) {
-                $schemaFactory = new SchemaFactory();
-            }
-            $schema = $schemaFactory->factory(
+            $schema = $this->schemaFactory()->factory(
                 $this->pdo
             );
             $dbColumns = $schema->fetchTableCols(
@@ -214,5 +210,21 @@ class Metadata
         $string .= 's';
 
         return $string;
+    }
+
+    /**
+     * Get a schema factory instance
+     *
+     * @codeCoverageIgnore
+     * @return \Ronanchilvers\Db\Schema\SchemaFactory
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function schemaFactory()
+    {
+        if (!$this->schemaFactory instanceof SchemaFactory) {
+            $this->schemaFactory = new SchemaFactory();
+        }
+
+        return $this->schemaFactory;
     }
 }
