@@ -46,6 +46,29 @@ class MetaDataTest extends TestCase
     }
 
     /**
+     * Get a mock schema factory
+     *
+     * @return \Ronanchilvers\Db\Schema\SchemaFactory
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function mockSchemaFactory()
+    {
+        $schema = $this->createMock(SchemaInterface::class);
+        $schema
+            ->expects($this->once())
+            ->method('fetchTableCols')
+            ->willReturn(Fixture::load('Schema/table'))
+            ;
+        $schemaFactory = $this->createMock(SchemaFactory::class);
+        $schemaFactory
+            ->expects($this->once())
+            ->method('factory')
+            ->willReturn($schema);
+
+        return $schemaFactory;
+    }
+
+    /**
      * Get a new test instance
      *
      * @param \Ronanchilvers\Db\Schema\SchemaFactory $schemaFactory
@@ -93,17 +116,7 @@ class MetaDataTest extends TestCase
      */
     public function testMetadataCanGetModelTableColumns()
     {
-        $schema = $this->createMock(SchemaInterface::class);
-        $schema
-            ->expects($this->once())
-            ->method('fetchTableCols')
-            ->willReturn(Fixture::load('Schema/table'))
-            ;
-        $schemaFactory = $this->createMock(SchemaFactory::class);
-        $schemaFactory
-            ->expects($this->once())
-            ->method('factory')
-            ->willReturn($schema);
+        $schemaFactory = $this->mockSchemaFactory();
         $instance = $this->newInstance($schemaFactory);
         $result = $instance->columns();
         $this->assertEquals(2, count($result));
@@ -121,5 +134,19 @@ class MetaDataTest extends TestCase
         $this->assertFalse($result['field_1']['primary']);
         $this->assertEquals('varchar', $result['field_1']['type']);
         $this->assertEquals(256, $result['field_1']['length']);
+    }
+
+    /**
+     * Test that the meta data can get the primary key
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMetadataCanGetPrimaryKey()
+    {
+        $schemaFactory = $this->mockSchemaFactory();
+        $instance = $this->newInstance($schemaFactory);
+
+        $this->assertEquals('id', $instance->primaryKey());
     }
 }
