@@ -125,6 +125,7 @@ class QueryBuilder
      */
     protected function newBuilder()
     {
+        // @todo Don't hardcode mysql
         return new \ClanCats\Hydrahon\Builder(
             'mysql',
             $this->generateCallback()
