@@ -99,26 +99,6 @@ class Metadata
     }
 
     /**
-     * Get the primary key column name
-     *
-     * @return string
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    public function primaryKey()
-    {
-        if (is_null($this->primaryKey)) {
-            foreach ($this->columns() as $column => $data) {
-                if (true === $data['primary']) {
-                    $this->primaryKey = $column;
-                    break;
-                }
-            }
-        }
-
-        return $this->primaryKey;
-    }
-
-    /**
      * Get the column data for this model
      *
      * @return array
@@ -146,6 +126,26 @@ class Metadata
         }
 
         return $this->columns;
+    }
+
+    /**
+     * Get the primary key column name
+     *
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function primaryKey()
+    {
+        if (is_null($this->primaryKey)) {
+            foreach ($this->columns() as $column => $data) {
+                if (true === $data['primary']) {
+                    $this->primaryKey = $column;
+                    break;
+                }
+            }
+        }
+
+        return $this->primaryKey;
     }
 
     /**
