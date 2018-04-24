@@ -2,11 +2,12 @@
 
 namespace Ronanchilvers\Db\Test;
 
+use ClanCats\Hydrahon\Query\Sql\Select;
 use PDO;
-use PHPUnit\Framework\Error\Error;
 use Ronanchilvers\Db\Model;
 use Ronanchilvers\Db\Model\Metadata;
 use Ronanchilvers\Db\QueryBuilder;
+use Ronanchilvers\Db\Test\Model\MockModel;
 use Ronanchilvers\Db\Test\TestCase;
 use RuntimeException;
 
@@ -200,5 +201,28 @@ class ModelTest extends TestCase
         $instance = $this->newInstance();
 
         $instance->foobar();
+    }
+
+    /**
+     * Test that magic static call passes methods to the query builder
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMagicStaticCallPassesToQueryBuilder()
+    {
+        $this->assertInstanceof(Select::class, MockModel::select());
+    }
+
+    /**
+     * Test that magic static call throws an exception for invalid methods
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMagicStaticCallThrowsExceptionForInvalidMethods()
+    {
+        $this->expectException(RuntimeException::class);
+        MockModel::foobar();
     }
 }

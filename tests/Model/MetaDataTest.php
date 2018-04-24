@@ -57,7 +57,7 @@ class MetaDataTest extends TestCase
         $schema
             ->expects($this->once())
             ->method('fetchTableCols')
-            ->willReturn(Fixture::load('Schema/table'))
+            ->willReturn(Fixture::load('schema/table'))
             ;
         $schemaFactory = $this->createMock(SchemaFactory::class);
         $schemaFactory
