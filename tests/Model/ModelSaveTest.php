@@ -50,7 +50,6 @@ class ModelSaveTest extends TestCase
     /**
      * Get a new test instance
      *
-     * @
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     protected function newInstance()
@@ -123,8 +122,47 @@ class ModelSaveTest extends TestCase
             ->willReturn(1);
 
         $instance->setField_1('foobar');
-        $instance->save();
 
+        $this->assertTrue($instance->save());
         $this->assertEquals(1, $instance->getId());
+    }
+
+    /**
+     * Test that save returns false if insert fails
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testInsertingReturnsFalseIfQueryFails()
+    {
+        $data = ['field_1' => 'foobar'];
+        $mockInsert = $this->createMock(Insert::class);
+        $mockInsert
+            ->expects($this->once())
+            ->method('values')
+            ->with($data)
+            ->willReturn($mockInsert)
+            ;
+        $mockInsert
+            ->expects($this->once())
+            ->method('execute')
+            ->willReturn(false);
+        $mockQueryBuilder = $this->mockQueryBuilder();
+        $mockQueryBuilder
+            ->expects($this->once())
+            ->method('insert')
+            ->willReturn($mockInsert);
+        $instance = $this->newInstance();
+        $instance
+            ->expects($this->once())
+            ->method('newQueryBuilder')
+            ->willReturn($mockQueryBuilder)
+            ;
+        $this->mockPDO
+            ->expects($this->never())
+            ->method('lastInsertId');
+
+        $instance->setField_1('foobar');
+        $this->assertFalse($instance->save());
     }
 }
