@@ -44,13 +44,12 @@ class Model
             return call_user_func_array([$builder, $method], $args);
         }
 
-        trigger_error(
+        throw new RuntimeException(
             sprintf(
-                'Call to undefined method %s::%s()',
+                'Undefined method %s::%s()',
                 get_called_class(),
                 $method
-            ),
-            E_USER_ERROR
+            )
         );
     }
 
@@ -117,13 +116,12 @@ class Model
             }
         }
 
-        trigger_error(
+        throw new RuntimeException(
             sprintf(
-                'Call to undefined method %s::%s()',
+                'Undefined method %s::%s()',
                 get_called_class(),
                 $method
-            ),
-            E_USER_ERROR
+            )
         );
     }
 
