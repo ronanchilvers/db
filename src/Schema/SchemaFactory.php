@@ -45,6 +45,28 @@ class SchemaFactory
     }
 
     /**
+     * Get the registered column factory
+     *
+     * @return \Aura\SqlSchema\ColumnFactory
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function columnFactory()
+    {
+        return $this->columnFactory;
+    }
+
+    /**
+     * Get the registered schemas
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function schemas()
+    {
+        return $this->schemas;
+    }
+
+    /**
      * Get a new schema object
      *
      * @param \PDO    $pdo  A database connection
