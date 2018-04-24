@@ -171,11 +171,14 @@ class Metadata
     public function prefix($string)
     {
         $prefix = $this->fieldPrefix;
+        if (!empty($prefix)) {
+            $prefix = "{$prefix}_";
+        }
         if (0 === strpos($string, $prefix)) {
             return $string;
         }
 
-        return "{$prefix}_{$string}";
+        return "{$prefix}{$string}";
     }
 
     /**
@@ -189,7 +192,7 @@ class Metadata
     {
         $prefix = $this->fieldPrefix;
         if (0 === strpos($string, $prefix)) {
-            return substr($string, 0, strlen($prefix) + 1);
+            return substr($string, strlen($prefix) + 1);
         }
 
         return $string;

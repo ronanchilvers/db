@@ -149,4 +149,74 @@ class MetaDataTest extends TestCase
 
         $this->assertEquals('id', $instance->primaryKey());
     }
+
+    /**
+     * Test that meta data can identify a column is present
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMetadataCanIdentifyColumnsPresent()
+    {
+        $schemaFactory = $this->mockSchemaFactory();
+        $instance = $this->newInstance($schemaFactory);
+
+        $this->assertTrue($instance->hasColumn('id'));
+        $this->assertTrue($instance->hasColumn('field_1'));
+        $this->assertFalse($instance->hasColumn('foobar'));
+    }
+
+    /**
+     * Test that meta data can prefix a field correctly by default
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMetadataCanPrefixFieldByDefault()
+    {
+        $instance = $this->newInstance();
+
+        $this->assertEquals('id', $instance->prefix('id'));
+        $this->assertEquals('field_1', $instance->prefix('field_1'));
+    }
+
+    /**
+     * Test that meta data can prefix a field with a given prefix
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMetadataCanPrefixFieldWithGivenPrefix()
+    {
+        $instance = new class(
+            $this->mockPdo(),
+            new MockModel()
+        ) extends Metadata {
+            protected $fieldPrefix = 'foobar';
+        };
+        $this->assertEquals('foobar_id', $instance->prefix('id'));
+        $this->assertEquals('foobar_field_1', $instance->prefix('field_1'));
+        $this->assertEquals('foobar_id', $instance->prefix('foobar_id'));
+        $this->assertEquals('foobar_field_1', $instance->prefix('foobar_field_1'));
+    }
+
+    /**
+     * Test that meta data can unprefix a field with a given prefix
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testMetadataCanUnprefixAFieldWithGivenPrefix()
+    {
+        $instance = new class(
+            $this->mockPdo(),
+            new MockModel()
+        ) extends Metadata {
+            protected $fieldPrefix = 'foobar';
+        };
+        $this->assertEquals('id', $instance->unprefix('foobar_id'));
+        $this->assertEquals('field_1', $instance->unprefix('foobar_field_1'));
+        $this->assertEquals('id', $instance->unprefix('id'));
+        $this->assertEquals('field_1', $instance->unprefix('field_1'));
+    }
 }
