@@ -196,7 +196,7 @@ class ModelTest extends TestCase
      */
     public function testMagicCallTriggersErrorForUnknownMethods()
     {
-        // $this->expectException(RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $instance = $this->newInstance();
 
         $instance->foobar();
