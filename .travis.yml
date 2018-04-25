@@ -13,7 +13,7 @@ cache:
         - $HOME/.composer/cache
 
 before_install:
-    - travis_retry composer self-update
+    - travis_retry composer self-update 1.6.3
 
 install:
     - travis_retry composer install --no-interaction --prefer-dist --dev
