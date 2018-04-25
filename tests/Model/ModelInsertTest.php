@@ -12,11 +12,11 @@ use Ronanchilvers\Db\Test\TestCase;
 use RuntimeException;
 
 /**
- * Test suite for the model::save() method
+ * Test suite for the model::save() method when inserting
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class ModelSaveTest extends TestCase
+class ModelInsertTest extends TestCase
 {
     /**
      * @var PDO
