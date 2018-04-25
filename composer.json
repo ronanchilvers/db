@@ -30,9 +30,6 @@
         "phpunit/phpunit": "^6.0"
     },
     "suggests": {},
-    "config": {
-        "github-protocols": [ "https" ]
-    },
     "repositories": [
         {
             "type": "vcs",
