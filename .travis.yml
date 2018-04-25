@@ -13,6 +13,7 @@ cache:
         - $HOME/.composer/cache
 
 before_install:
+    - travis_retry composer clear-cache
     - travis_retry composer self-update
 
 install:
