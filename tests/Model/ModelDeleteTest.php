@@ -2,7 +2,7 @@
 
 namespace Ronanchilvers\Db\Test\Model;
 
-use ClanCats\Hydrahon\Query\Sql\Update;
+use ClanCats\Hydrahon\Query\Sql\Delete;
 use PDO;
 use Ronanchilvers\Db\Model;
 use Ronanchilvers\Db\Model\Metadata;
@@ -12,11 +12,11 @@ use Ronanchilvers\Db\Test\TestCase;
 use RuntimeException;
 
 /**
- * Test suite for the model::save() method when updating
+ * Test suite for the model::delete() method
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class ModelUpdateTest extends TestCase
+class ModelDeleteTest extends TestCase
 {
     /**
      * @var PDO
@@ -52,20 +52,14 @@ class ModelUpdateTest extends TestCase
      *
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function newInstance()
+    protected function newInstance($class = DeleteModel::class)
     {
         $mockMetadata = $this->createMock(Metadata::class);
         $mockMetadata
             ->expects($this->any())
-            ->method('prefix')
-            ->willReturnCallback(function ($value) {
-                return $value;
-            });
-        $mockMetadata
-            ->expects($this->any())
             ->method('primaryKey')
             ->willReturn('id');
-        $builder = $this->getMockBuilder(UpdateModel::class);
+        $builder = $this->getMockBuilder($class);
         $builder->setMethods([
             'metaData',
             'newQueryBuilder'
@@ -86,43 +80,33 @@ class ModelUpdateTest extends TestCase
      * @test
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function testUpdatingExistingModel()
+    public function testDeletingExistingModel()
     {
-        $data = ['id' => 1, 'field_1' => 'foobar'];
-        $mockUpdate = $this->createMock(Update::class);
-        $mockUpdate
-            ->expects($this->once())
-            ->method('set')
-            ->with($data)
-            ->willReturn($mockUpdate)
-            ;
-        $mockUpdate
+        $mockDelete = $this->createMock(Delete::class);
+        $mockDelete
             ->expects($this->once())
             ->method('where')
             ->with('id', '=', 1)
-            ->willReturn($mockUpdate)
+            ->willReturn($mockDelete)
             ;
-        $mockUpdate
+        $mockDelete
             ->expects($this->once())
             ->method('execute')
             ->willReturn(true);
         $mockQueryBuilder = $this->mockQueryBuilder();
         $mockQueryBuilder
             ->expects($this->once())
-            ->method('update')
-            ->willReturn($mockUpdate);
+            ->method('delete')
+            ->willReturn($mockDelete);
         $instance = $this->newInstance();
         $instance
             ->expects($this->once())
             ->method('newQueryBuilder')
             ->willReturn($mockQueryBuilder)
             ;
-        $this->mockPDO
-            ->expects($this->never())
-            ->method('lastInsertId');
 
-        $this->assertTrue($instance->save());
-        $this->assertEquals(1, $instance->getId());
+        $this->assertTrue($instance->delete());
+        $this->assertEmpty($instance->getId());
     }
 
     /**
@@ -131,54 +115,57 @@ class ModelUpdateTest extends TestCase
      * @test
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function testUpdatingReturnsFalseIfQueryFails()
+    public function testDeletingReturnsFalseIfQueryFails()
     {
-        $data = ['id' => 1, 'field_1' => 'foobar'];
-        $mockUpdate = $this->createMock(Update::class);
-        $mockUpdate
-            ->expects($this->once())
-            ->method('set')
-            ->with($data)
-            ->willReturn($mockUpdate)
-            ;
-        $mockUpdate
+        $mockDelete = $this->createMock(Delete::class);
+        $mockDelete
             ->expects($this->once())
             ->method('where')
             ->with('id', '=', 1)
-            ->willReturn($mockUpdate)
+            ->willReturn($mockDelete)
             ;
-        $mockUpdate
+        $mockDelete
             ->expects($this->once())
             ->method('execute')
             ->willReturn(false);
         $mockQueryBuilder = $this->mockQueryBuilder();
         $mockQueryBuilder
             ->expects($this->once())
-            ->method('update')
-            ->willReturn($mockUpdate);
+            ->method('delete')
+            ->willReturn($mockDelete);
         $instance = $this->newInstance();
         $instance
             ->expects($this->once())
             ->method('newQueryBuilder')
             ->willReturn($mockQueryBuilder)
             ;
-        $this->mockPDO
-            ->expects($this->never())
-            ->method('lastInsertId');
 
-        $this->assertFalse($instance->save());
+        $this->assertFalse($instance->delete());
+    }
+
+    /**
+     * Test that a non loaded model cannot be deleted
+     *
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testNonLoadedModelCannotBeDelete()
+    {
+        $this->expectException(RuntimeException::class);
+        $instance = $this->newInstance(Model::class);
+        $instance->delete();
     }
 }
 
 /**
  * Mock model for testing with
  *
- * @author me
+ * @author Ronan Chilvers <ronan@d3r.com>
  */
-class UpdateModel extends Model
+class DeleteModel extends Model
 {
     protected $data = [
-        'id' => 1,
-        'field_1' => 'foobar'
+        'id' => 1
     ];
 }
+

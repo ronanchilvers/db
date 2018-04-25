@@ -219,7 +219,7 @@ class Model
         $pKey         = $metaData->primaryKey();
         if (!isset($this->data[$pKey]) || empty($this->data[$pKey])) {
             throw new RuntimeException(
-                sprintf('Unable to delete model without primary key', $key)
+                sprintf('Unable to delete model without primary key %s', $pKey)
             );
         }
         $query = $this->newQueryBuilder()
