@@ -11,7 +11,7 @@ use Ronanchilvers\Db\Test\TestCase;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-abstract class HydratorTest extends TestCase
+class HydratorTest extends TestCase
 {
     /**
      * @author Ronan Chilvers <ronan@d3r.com>
@@ -44,7 +44,7 @@ abstract class HydratorTest extends TestCase
             'id'      => 1,
             'field_1' => 'foobar',
         ];
-        $model = new DehydrateModel();
+        $model = new Model();
         $instance = $this->newInstance();
         $instance->hydrate(
             $data,

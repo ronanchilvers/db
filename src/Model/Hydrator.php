@@ -8,10 +8,9 @@ use Ronanchilvers\Db\Model;
  * Hydrator for models
  *
  * @todo Fix this so that it can pass unit tests
- * @codeCoverageIgnore
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class Hydrator extends Model
+class Hydrator
 {
     /**
      * Class constructor
@@ -28,11 +27,13 @@ class Hydrator extends Model
      * @param \Ronanchilvers\Db\Model $model
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function hydrate(array $data, Model $model)
+    public function hydrate(array $array, Model $model)
     {
-        foreach ($data as $key => $value) {
-            $model->data[$key] = $value;
-        }
+        $closure = function ($data) {
+            $this->data = $data;
+        };
+        $hydrator = $closure->bindTo($model, $model);
+        $hydrator($array);
     }
 
     /**
@@ -44,6 +45,11 @@ class Hydrator extends Model
      */
     public function dehydrate(Model $model)
     {
-        return $model->data;
+        $closure = function () {
+            return $this->data;
+        };
+        $dehydrator = $closure->bindTo($model, $model);
+
+        return $dehydrator();
     }
 }
