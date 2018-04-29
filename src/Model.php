@@ -116,8 +116,12 @@ abstract class Model
             return;
         }
         foreach (static::$observers[$class] as $observer) {
-            $observer->$event($model);
+            if (false === $observer->$event($model)) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     /**
@@ -218,9 +222,15 @@ abstract class Model
         $pKey         = $metaData->primaryKey();
         $data         = $this->data;
         $queryBuilder = $this->newQueryBuilder();
-        static::notifyObservers($this, 'saving');
+        if (false === static::notifyObservers($this, 'saving'))
+        {
+            return false;
+        }
         if (true === isset($data[$pKey])) {
-            static::notifyObservers($this, 'updating');
+            if (false === static::notifyObservers($this, 'updating'))
+            {
+                return false;
+            }
             // Update
             $query = $queryBuilder->update();
             $id = $data[$pKey];
@@ -243,7 +253,10 @@ abstract class Model
             static::notifyObservers($this, 'saved');
             return true;
         } else {
-            static::notifyObservers($this, 'creating');
+            if (false === static::notifyObservers($this, 'creating'))
+            {
+                return false;
+            }
             // Insert
             $query = $queryBuilder->insert();
             $query->values(
@@ -278,7 +291,9 @@ abstract class Model
                 sprintf('Unable to delete model without primary key %s', $pKey)
             );
         }
-        static::notifyObservers($this, 'deleting');
+        if (false === static::notifyObservers($this, 'deleting')) {
+            return false;
+        }
         $query = $this->newQueryBuilder()
             ->delete()
             ->where(
