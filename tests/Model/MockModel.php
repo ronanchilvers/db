@@ -17,7 +17,7 @@ class MockModel extends Model
      * @return mixed
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function notifyObserversProxy(
+    static public function notifyObserversProxy(
         Model $model,
         string $event
     )
