@@ -10,7 +10,6 @@ use Ronanchilvers\Db\Model\Metadata;
 use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Db\QueryBuilder;
 use Ronanchilvers\Db\Test\Model\MockModel;
-use Ronanchilvers\Db\Test\Model\MockModelObserver;
 use Ronanchilvers\Db\Test\TestCase;
 use RuntimeException;
 
