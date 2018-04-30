@@ -44,7 +44,7 @@ class HydratorTest extends TestCase
             'id'      => 1,
             'field_1' => 'foobar',
         ];
-        $model = new Model();
+        $model = new HydrateModel();
         $instance = $this->newInstance();
         $instance->hydrate(
             $data,
@@ -71,6 +71,15 @@ class HydratorTest extends TestCase
         ];
         $this->assertEquals($data, $instance->dehydrate($model));
     }
+}
+
+/**
+ * Test model for dehydrating
+ *
+ * @author Ronan Chilvers <ronan@d3r.com>
+ */
+class HydrateModel extends Model
+{
 }
 
 /**

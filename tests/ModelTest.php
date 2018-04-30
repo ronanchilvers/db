@@ -5,7 +5,9 @@ namespace Ronanchilvers\Db\Test;
 use ClanCats\Hydrahon\Query\Sql\Select;
 use PDO;
 use Ronanchilvers\Db\Model;
+use Ronanchilvers\Db\Model\AbstractObserver;
 use Ronanchilvers\Db\Model\Metadata;
+use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Db\QueryBuilder;
 use Ronanchilvers\Db\Test\Model\MockModel;
 use Ronanchilvers\Db\Test\TestCase;
@@ -224,5 +226,72 @@ class ModelTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         MockModel::foobar();
+    }
+
+    /**
+     * Provider
+     *
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function observerEventProvider()
+    {
+        return [
+            ['loaded'],
+            ['creating'],
+            ['created'],
+            ['updating'],
+            ['updated'],
+            ['saving'],
+            ['saved'],
+            ['deleting'],
+            ['deleted'],
+        ];
+    }
+
+    /**
+     * Test that an observer set on a model fires correctly
+     *
+     * @dataProvider observerEventProvider
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testObserversCanBeSetAndFired($event)
+    {
+        $mockModel = $this->createMock(MockModel::class);
+        $mockObserver = $this->createMock(ObserverInterface::class);
+        $mockObserver->expects($this->once())
+            ->method($event)
+            ->with($mockModel);
+        MockModel::observe($mockObserver);
+        MockModel::notifyObserversProxy(
+            $mockModel,
+            $event
+        );
+    }
+
+    /**
+     * Test that observer notification stops when an observer returns false
+     *
+     * @dataProvider observerEventProvider
+     * @test
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function testReturningFalseStopsEventObservation($event)
+    {
+        $mockModel = $this->createMock(MockModel::class);
+        $mockObserver1 = $this->createMock(ObserverInterface::class);
+        $mockObserver2 = $this->createMock(ObserverInterface::class);
+        $mockObserver1->expects($this->once())
+            ->method($event)
+            ->with($mockModel)
+            ->willReturn(false);
+        $mockObserver2->expects($this->never())
+            ->method($event);
+        MockModel::observe($mockObserver1);
+        MockModel::observe($mockObserver2);
+        MockModel::notifyObserversProxy(
+            $mockModel,
+            $event
+        );
     }
 }

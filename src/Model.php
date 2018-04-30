@@ -4,6 +4,7 @@ namespace Ronanchilvers\Db;
 
 use PDO;
 use Ronanchilvers\Db\Model\Metadata;
+use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Utility\Str;
 use RuntimeException;
 
@@ -12,7 +13,7 @@ use RuntimeException;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class Model
+abstract class Model
 {
     /**
      * An instance of PDO to use for database interactions
@@ -30,6 +31,11 @@ class Model
      * @var array
      */
     static protected $modelFields = [];
+
+    /**
+     * @var array
+     */
+    static protected $observers = [];
 
     /**
      * Magic call for static methods
@@ -73,6 +79,49 @@ class Model
     static protected function pdo()
     {
         return self::$pdo;
+    }
+
+    /**
+     * Register a callable as an observer for a particular model
+     *
+     * @param \Ronanchilvers\Db\Model\ObserverInterface $observer
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    static public function observe(ObserverInterface $observer)
+    {
+        $class = get_called_class();
+        if (!isset(static::$observers[$class])) {
+            static::$observers[$class] = [];
+        }
+        static::$observers[$class][] = $observer;
+    }
+
+    /**
+     * Notify observers of an event
+     *
+     * @param Model $model
+     * @param string $event
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    static protected function notifyObservers(
+        Model $model,
+        string $event
+    )
+    {
+        $class = get_called_class();
+        if (!isset(static::$observers[$class])) {
+            return;
+        }
+        if (!is_array(static::$observers[$class]) || 0 == count(static::$observers[$class])) {
+            return;
+        }
+        foreach (static::$observers[$class] as $observer) {
+            if (false === $observer->$event($model)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -173,7 +222,15 @@ class Model
         $pKey         = $metaData->primaryKey();
         $data         = $this->data;
         $queryBuilder = $this->newQueryBuilder();
+        if (false === static::notifyObservers($this, 'saving'))
+        {
+            return false;
+        }
         if (true === isset($data[$pKey])) {
+            if (false === static::notifyObservers($this, 'updating'))
+            {
+                return false;
+            }
             // Update
             $query = $queryBuilder->update();
             $id = $data[$pKey];
@@ -188,8 +245,18 @@ class Model
                     $id
                 );
 
-            return $query->execute();
+            $result = $query->execute();
+            if (false === $result) {
+                return false;
+            }
+            static::notifyObservers($this, 'updated');
+            static::notifyObservers($this, 'saved');
+            return true;
         } else {
+            if (false === static::notifyObservers($this, 'creating'))
+            {
+                return false;
+            }
             // Insert
             $query = $queryBuilder->insert();
             $query->values(
@@ -201,6 +268,8 @@ class Model
             }
             $this->data[$pKey] = static::pdo()->lastInsertId();
 
+            static::notifyObservers($this, 'created');
+            static::notifyObservers($this, 'saved');
             return true;
         }
 
@@ -222,6 +291,9 @@ class Model
                 sprintf('Unable to delete model without primary key %s', $pKey)
             );
         }
+        if (false === static::notifyObservers($this, 'deleting')) {
+            return false;
+        }
         $query = $this->newQueryBuilder()
             ->delete()
             ->where(
@@ -234,6 +306,7 @@ class Model
             return false;
         }
         unset($this->data[$pKey]);
+        static::notifyObservers($this, 'deleted');
 
         return true;
     }

@@ -11,4 +11,17 @@ use Ronanchilvers\Db\Model;
  */
 class MockModel extends Model
 {
+    /**
+     * Static proxy for notifyObservers to allow testing
+     *
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    static public function notifyObserversProxy(
+        Model $model,
+        string $event
+    )
+    {
+        return static::notifyObservers($model, $event);
+    }
 }
