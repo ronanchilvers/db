@@ -23,7 +23,7 @@
         "php": "^7.0",
         "aura/sqlschema": "^2.0",
         "nette/php-generator": "^3.0",
-        "ronanchilvers/utility": "dev-master",
+        "ronanchilvers/utility": "^1.0",
         "clancats/hydrahon": "^1.1"
     },
     "require-dev": {
