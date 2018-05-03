@@ -2,6 +2,7 @@
 namespace Ronanchilvers\Db\Console\Command;
 
 use Ronanchilvers\Db\Model;
+use Ronanchilvers\Db\Model\Generator;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -58,14 +59,15 @@ class GenerateCommand extends Command
             include $file;
         }
         // Find classes that extend \Ronanchilvers\Db\Model
-        $models = [];
+        $generator = new Generator();
         foreach (get_declared_classes() as $class) {
             if (in_array(Model::class, class_parents($class))) {
-                $models[] = $class;
+                $model = new $class();
+                $classString = $generator->generate($model->metaData());
+                // @TODO Remove var_dump
+                var_dump($classString); exit();
             }
         }
 
-        // @TODO Remove var_dump
-        var_dump($models); exit();
     }
 }
