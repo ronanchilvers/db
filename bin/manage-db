@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+use Ronanchilvers\Db\Console\Command\GenerateCommand;
+use Symfony\Component\Console\Application;
+
+foreach ([__DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $file) {
+    if (file_exists($file)) {
+        include($file);
+        break;
+    }
+}
+
+$app = new Application('ronanchilvers/db');
+$app->add(new GenerateCommand);
+$app->run();

@@ -24,11 +24,16 @@
         "aura/sqlschema": "^2.0",
         "nette/php-generator": "^3.0",
         "ronanchilvers/utility": "^1.0",
-        "clancats/hydrahon": "^1.1"
+        "clancats/hydrahon": "^1.1",
+        "symfony/console": "^3.4",
+        "symfony/finder": "^3.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^6.0"
     },
+    "bin": [
+        "bin/manage-db"
+    ],
     "suggests": {},
     "repositories": [
         {
