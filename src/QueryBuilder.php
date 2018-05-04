@@ -9,7 +9,6 @@ use ClanCats\Hydrahon\Query\Sql\Select;
 use ClanCats\Hydrahon\Query\Sql\Update;
 use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
-use Ronanchilvers\Db\Model\Metadata;
 use Ronanchilvers\Utility\Collection;
 use RuntimeException;
 
@@ -26,21 +25,23 @@ class QueryBuilder
     protected $pdo;
 
     /**
-     * @var Ronanchilvers\Db\Model\Metadata
+     * @var string
      */
-    protected $metadata;
+    protected $modelClass;
 
     /**
      * Class constructor
      *
+     * @param PDO $pdo
+     * @param string $model
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     public function __construct(
         PDO $pdo,
-        $metadata
+        $modelClass
     ) {
         $this->pdo = $pdo;
-        $this->metadata = $metadata;
+        $this->modelClass = $modelClass;
         $this->query = null;
     }
 
@@ -56,6 +57,23 @@ class QueryBuilder
     }
 
     /**
+     * Get a single record by id
+     *
+     * @param mixed $id
+     * @return \Ronanchilvers\Db\Model|null
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function one($id)
+    {
+        $modelClass = $this->modelClass;
+
+        return $this
+            ->select()
+            ->where($modelClass::$primaryKey, $id)
+            ->one();
+    }
+
+    /**
      * Create a select object
      *
      * @return \ClanCats\Hydrahon\Query\Sql\Select
@@ -65,10 +83,10 @@ class QueryBuilder
     {
         $builder = $this->newBuilder();
 
+        $modelClass = $this->modelClass;
         $select = $builder->select();
-        $select->table(
-            $this->metadata->table()
-        );
+        $select
+            ->table($modelClass::$table);
 
         return $select;
     }
@@ -82,9 +100,10 @@ class QueryBuilder
     public function insert()
     {
         $builder = $this->newBuilder();
+        $modelClass = $this->modelClass;
 
         return $builder
-            ->table($this->metadata->table())
+            ->table($modelClass::$table)
             ->insert();
     }
 
@@ -97,9 +116,10 @@ class QueryBuilder
     public function update()
     {
         $builder = $this->newBuilder();
+        $modelClass = $this->modelClass;
 
         return $builder
-            ->table($this->metadata->table())
+            ->table($modelClass::$table)
             ->update();
     }
 
@@ -111,9 +131,11 @@ class QueryBuilder
      */
     public function delete()
     {
+        $modelClass = $this->modelClass;
+
         return $this
             ->newBuilder()
-            ->table($this->metadata->table())
+            ->table($modelClass::$table)
             ->delete();
     }
 
@@ -153,7 +175,7 @@ class QueryBuilder
                 return $result;
             }
 
-            $class = $this->metadata->class();
+            $class = $this->modelClass;
             $result = [];
             $hydrator = new Hydrator();
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

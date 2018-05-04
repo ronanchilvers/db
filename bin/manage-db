@@ -3,6 +3,7 @@
 
 use Ronanchilvers\Db\Console\Command\GenerateCommand;
 use Ronanchilvers\Db\Model;
+use Ronanchilvers\Db\Schema\SchemaFactory;
 use Symfony\Component\Console\Application;
 
 foreach ([__DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $file) {
@@ -13,13 +14,15 @@ foreach ([__DIR__ . '/../autoload.php', __DIR__ . '/../vendor/autoload.php', __D
 }
 
 $pdo = new PDO(
-    'mysql:host=localhost;dbname=db_dev',
+    'mysql:host=127.0.0.1;port=3306;dbname=db_test',
     'dev',
     'dev'
 );
 
-Model::setPdo($pdo);
-
 $app = new Application('ronanchilvers/db');
-$app->add(new GenerateCommand);
+$app->add(
+    new GenerateCommand(
+        (new SchemaFactory())->factory($pdo)
+    )
+);
 $app->run();

@@ -3,7 +3,6 @@
 namespace Ronanchilvers\Db;
 
 use PDO;
-use Ronanchilvers\Db\Model\Metadata;
 use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Utility\Str;
 use RuntimeException;
@@ -16,21 +15,21 @@ use RuntimeException;
 abstract class Model
 {
     /**
+     * @var string
+     */
+    static public $table;
+
+    /**
+     * @var string
+     */
+    static public $primaryKey;
+
+    /**
      * An instance of PDO to use for database interactions
      *
      * @var \PDO
      */
     static private $pdo;
-
-    /**
-     * @var array
-     */
-    static protected $primaryKeys = [];
-
-    /**
-     * @var array
-     */
-    static protected $modelFields = [];
 
     /**
      * @var array
@@ -127,22 +126,17 @@ abstract class Model
     /**
      * @var string
      */
-    protected $metaDataClass = Metadata::class;
+    protected $columnPrefix = '';
 
     /**
-     * @var Ronanchilvers\Db\Model\Metadata
+     * @var array
      */
-    protected $metadata = null;
+    protected $columns = [];
 
     /**
      * @var array
      */
     protected $data = [];
-
-    /**
-     * @var boolean
-     */
-    protected $disableAutoGetSet = false;
 
     /**
      * Class constructor
@@ -154,7 +148,7 @@ abstract class Model
 
     public function __call($method, $args)
     {
-        if (false === $this->disableAutoGetSet && (0 === strpos($method, 'get') || 0 === strpos($method, 'set'))) {
+        if (0 === strpos($method, 'get') || 0 === strpos($method, 'set')) {
             $attribute = Str::snake(mb_substr($method, 3));
             switch (substr($method, 0, 3)) {
                 case 'set':
@@ -175,25 +169,6 @@ abstract class Model
     }
 
     /**
-     * Get a meta data instance for this model
-     *
-     * @return Ronanchilvers\Db\Model\Metadata
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    public function metaData()
-    {
-        $class = $this->metaDataClass;
-        if (!$this->metadata instanceof $class) {
-            $this->metadata = new $class(
-                static::pdo(),
-                $this
-            );
-        }
-
-        return $this->metadata;
-    }
-
-    /**
      * Get a new query builder for this model
      *
      * @return Ronanchilvers\Db\QueryBuilder
@@ -203,7 +178,7 @@ abstract class Model
     {
         return new QueryBuilder(
             static::pdo(),
-            $this->metaData()
+            get_called_class()
         );
     }
 
@@ -218,29 +193,41 @@ abstract class Model
      */
     public function save()
     {
-        $metaData     = $this->metaData();
-        $pKey         = $metaData->primaryKey();
         $data         = $this->data;
         $queryBuilder = $this->newQueryBuilder();
         if (false === static::notifyObservers($this, 'saving'))
         {
             return false;
         }
-        if (true === isset($data[$pKey])) {
+        foreach ($this->columns as $column => $params) {
+            if ($column === static::$primaryKey) {
+                continue;
+            }
+            if (
+                true == $params['required'] &&
+                (
+                    !isset($this->data[$column]) ||
+                    empty($this->data[$column])
+                )
+            ) {
+                return false;
+            }
+        }
+        if (true === isset($data[static::$primaryKey])) {
             if (false === static::notifyObservers($this, 'updating'))
             {
                 return false;
             }
             // Update
             $query = $queryBuilder->update();
-            $id = $data[$pKey];
-            unset($data[$pKey]);
+            $id = $data[static::$primaryKey];
+            unset($data[static::$primaryKey]);
             $query
                 ->set(
                     $this->data
                 )
                 ->where(
-                    $pKey,
+                    static::$primaryKey,
                     '=',
                     $id
                 );
@@ -266,7 +253,7 @@ abstract class Model
             if (true !== $query->execute()) {
                 return false;
             }
-            $this->data[$pKey] = static::pdo()->lastInsertId();
+            $this->data[static::$primaryKey] = static::pdo()->lastInsertId();
 
             static::notifyObservers($this, 'created');
             static::notifyObservers($this, 'saved');
@@ -284,11 +271,9 @@ abstract class Model
      */
     public function delete()
     {
-        $metaData     = $this->metaData();
-        $pKey         = $metaData->primaryKey();
-        if (!isset($this->data[$pKey]) || empty($this->data[$pKey])) {
+        if (!isset($this->data[static::$primaryKey]) || empty($this->data[static::$primaryKey])) {
             throw new RuntimeException(
-                sprintf('Unable to delete model without primary key %s', $pKey)
+                sprintf('Unable to delete model without primary key %s', static::$primaryKey)
             );
         }
         if (false === static::notifyObservers($this, 'deleting')) {
@@ -297,7 +282,7 @@ abstract class Model
         $query = $this->newQueryBuilder()
             ->delete()
             ->where(
-                $pKey,
+                static::$primaryKey,
                 '=',
                 $this->data[$pKey]
             )
@@ -305,7 +290,7 @@ abstract class Model
         if (false === $query->execute()) {
             return false;
         }
-        unset($this->data[$pKey]);
+        unset($this->data[static::$primaryKey]);
         static::notifyObservers($this, 'deleted');
 
         return true;
@@ -321,13 +306,13 @@ abstract class Model
      */
     protected function setData($key, $value)
     {
-        $key = $this->metaData()->prefix($key);
-        if (!$this->metaData()->hasColumn($key)) {
+        $key = $this->prefix($key);
+        if (!isset($this->columns[$key])) {
             throw new RuntimeException(
                 sprintf('Unknown field %s', $key)
             );
         }
-        if ($this->metaData()->primaryKey() == $key) {
+        if (static::$primaryKey == $key) {
             throw new RuntimeException(
                 sprintf('Invalid attempt to overwrite primary key column %s', $key)
             );
@@ -346,11 +331,47 @@ abstract class Model
      */
     protected function getData($key)
     {
-        $key = $this->metaData()->prefix($key);
+        $key = $this->prefix($key);
         if (isset($this->data[$key])) {
             return $this->data[$key];
         }
 
         return null;
+    }
+
+    /**
+     * Prefix a string with the configured field prefix
+     *
+     * @param  string $string
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function prefix($string)
+    {
+        $prefix = $this->columnPrefix;
+        if (!empty($prefix)) {
+            $prefix = "{$prefix}_";
+        }
+        if (!empty($prefix) && 0 === strpos($string, $prefix)) {
+            return $string;
+        }
+
+        return "{$prefix}{$string}";
+    }
+
+    /**
+     * Un-prefix a string with the configured field prefix
+     *
+     * @param string $string
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function unprefix($string)
+    {
+        if (!empty($this->columnPrefix) && 0 === strpos($string, $this->columnPrefix)) {
+            return substr($string, strlen($this->columnPrefix) + 1);
+        }
+
+        return $string;
     }
 }

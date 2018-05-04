@@ -11,7 +11,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "Ronanchilvers\\Db\\": "src/"
+            "Ronanchilvers\\Db\\": "src/",
+            "App\\Generated\\": "tmp/gen/"
         }
     },
     "autoload-dev": {
