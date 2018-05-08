@@ -73,7 +73,7 @@ class Application extends BaseApplication
         $configPath = null;
         if ($input->getOption('config')) {
             $configPath = $input->getOption('config');
-        } else if (file_exists($cwd . '/db.php')) {
+        } else if (file_exists($cwd . '/db.config.php')) {
             $configPath = $cwd . '/db.config.php';
         }
         if (!is_null($configPath)) {
