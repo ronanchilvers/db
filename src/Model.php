@@ -2,6 +2,7 @@
 
 namespace Ronanchilvers\Db;
 
+use DateTime;
 use PDO;
 use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Utility\Str;
@@ -131,6 +132,11 @@ abstract class Model
     /**
      * @var array
      */
+    protected $datetimeColumns = [];
+
+    /**
+     * @var array
+     */
     protected $columns = [];
 
     /**
@@ -149,7 +155,10 @@ abstract class Model
     public function __call($method, $args)
     {
         if (0 === strpos($method, 'get') || 0 === strpos($method, 'set')) {
-            $attribute = Str::snake(mb_substr($method, 3));
+            $attribute = Str::snake(
+                $this->prefix(mb_substr($method, 3))
+            );
+
             switch (substr($method, 0, 3)) {
                 case 'set':
                     return $this->setData($attribute, $args[0]);
@@ -317,6 +326,19 @@ abstract class Model
                 sprintf('Invalid attempt to overwrite primary key column %s', $key)
             );
         }
+
+        // Auto mutation
+        if (in_array($key, $this->datetimeColumns)) {
+            if (!$value instanceof DateTime) {
+                $value = date_create($value);
+            }
+            if ($value instanceof DateTime) {
+                $value = $value->format('Y-m-d H:i:s');
+            } else {
+                $value = null;
+            }
+        }
+
         $this->data[$key] = $value;
 
         return $this;
@@ -333,7 +355,16 @@ abstract class Model
     {
         $key = $this->prefix($key);
         if (isset($this->data[$key])) {
-            return $this->data[$key];
+            $data = $this->data[$key];
+
+            // Auto mutations
+            if (in_array($key, $this->datetimeColumns)) {
+                if (false === $data = date_create($data)) {
+                    $data = null;
+                }
+            }
+
+            return $data;
         }
 
         return null;
