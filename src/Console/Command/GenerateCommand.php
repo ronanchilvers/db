@@ -4,57 +4,50 @@ namespace Ronanchilvers\Db\Console\Command;
 use Aura\SqlSchema\SchemaInterface;
 use DateTime;
 use Nette\PhpGenerator\PhpNamespace;
+use PDO;
+use Ronanchilvers\Db\Console\Command;
 use Ronanchilvers\Db\Model;
 use Ronanchilvers\Db\Model\Generator;
+use Ronanchilvers\Db\Schema\SchemaFactory;
 use Ronanchilvers\Utility\Str;
 use RuntimeException;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * Command to generate the php code for models
+ *
+ * @author Ronan Chilvers
+ */
 class GenerateCommand extends Command
 {
-    /**
-     * @var \Aura\SqlSchema\SchemaInterface
-     */
-    protected $schema;
-
-    /**
-     * Class constructor
-     *
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    public function __construct(SchemaInterface $schema, $name = null)
-    {
-        parent::__construct($name);
-        $this->schema = $schema;
-    }
-
     protected function configure()
     {
         $this->setName('generate')
             ->setDescription('Generate model classes')
-            ->addArgument(
+            ->addOption(
                 'output_dir',
-                InputArgument::REQUIRED,
-                'The directory in which to store the generate code'
+                'o',
+                InputOption::VALUE_REQUIRED,
+                'The directory in which to store the generate code',
+                null
             )
             ->addOption(
                 'namespace',
                 null,
                 InputOption::VALUE_REQUIRED,
                 'The namespace to use for the generated classes',
-                'App'
+                null
             )
             ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $outputDir = $input->getArgument('output_dir');
+        $outputDir = $this->optionOrConfig($input, 'output_dir', null);
         if (!is_dir($outputDir)) {
             throw new RuntimeException(
                 sprintf('Output directory %s does not exist', $outputDir)
@@ -62,20 +55,28 @@ class GenerateCommand extends Command
         }
         $outputDir = realpath($outputDir);
 
-        $tables = $this->schema->fetchTableList();
+        $pdo = $this->config('pdo');
+        if (!$pdo instanceof PDO) {
+            throw new RuntimeException('Unable to locate valid PDO instance');
+        }
+        $schema = (new SchemaFactory)->factory($pdo);
+
+        $tables = $schema->fetchTableList();
         $output->writeln(sprintf('generating models for %d tables', count($tables)));
 
         // Generate models for classes extending Model
         $now = (new DateTime())->format('Y-m-d H:i:s');
         foreach ($tables as $table) {
             $output->write('table : ' . $table);
-            $dbColumns = $this->schema->fetchTableCols($table);
+            $dbColumns = $schema->fetchTableCols($table);
 
             // Generate a model name - the singular of the table name
             $modelName = Str::pascal(rtrim($table, 's'));
 
             // Create the namespace
-            $namespace = new PhpNamespace($input->getOption('namespace'));
+            $namespace = new PhpNamespace(
+                $this->optionOrConfig($input, 'namespace', 'App')
+            );
 
             // Create the base class definition
             $class = $namespace->addClass($modelName);
