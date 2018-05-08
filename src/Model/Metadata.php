@@ -68,6 +68,17 @@ class Metadata
     }
 
     /**
+     * Get the fully qualified class name for the model
+     *
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function fqcn()
+    {
+        return get_class($this->model);
+    }
+
+    /**
      * Get the model class for this configuration
      *
      * @return string
@@ -75,7 +86,10 @@ class Metadata
      */
     public function class()
     {
-        return get_class($this->model);
+        $class = get_class($this->model);
+        $class = explode('\\', $class);
+
+        return array_pop($class);
     }
 
     /**
