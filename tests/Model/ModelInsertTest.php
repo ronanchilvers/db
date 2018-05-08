@@ -16,7 +16,7 @@ use RuntimeException;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class ModelInsertTest extends TestCase
+abstract class ModelInsertTest extends TestCase
 {
     /**
      * @var PDO

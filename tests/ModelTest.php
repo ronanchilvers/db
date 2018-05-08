@@ -18,7 +18,7 @@ use RuntimeException;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class ModelTest extends TestCase
+abstract class ModelTest extends TestCase
 {
     /**
      * @author Ronan Chilvers <ronan@d3r.com>

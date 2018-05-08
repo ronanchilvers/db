@@ -16,7 +16,7 @@ use RuntimeException;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class ModelDeleteTest extends TestCase
+abstract class ModelDeleteTest extends TestCase
 {
     /**
      * @var PDO

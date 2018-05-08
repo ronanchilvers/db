@@ -17,7 +17,7 @@ use Ronanchilvers\Db\Test\TestCase;
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-class MetaDataTest extends TestCase
+abstract class MetaDataTest extends TestCase
 {
     /**
      * @author Ronan Chilvers <ronan@d3r.com>
