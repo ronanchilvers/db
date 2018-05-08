@@ -104,22 +104,26 @@ class GenerateCommand extends Command
                 ->addProperty('table', $table)
                 ->setVisibility('public')
                 ->setStatic()
+                ->addComment('The table name for this model')
                 ->addComment('@var string')
                 ;
             $class
                 ->addProperty('primaryKey', $primaryKey)
                 ->setVisibility('public')
                 ->setStatic()
+                ->addComment('The primary key for this model')
                 ->addComment('@var string')
                 ;
             $class
                 ->addProperty('columns', $columns)
                 ->setVisibility('protected')
+                ->addComment('The columns available for this model')
                 ->addComment('@var array')
                 ;
             $class
                 ->addProperty('data', $data)
                 ->setVisibility('protected')
+                ->addComment('The data array for this model')
                 ->addComment('@var array')
                 ;
 
