@@ -71,7 +71,7 @@ class GenerateCommand extends Command
             $dbColumns = $schema->fetchTableCols($table);
 
             // Generate a model name - the singular of the table name
-            $modelName = Str::pascal(rtrim($table, 's'));
+            $modelName = Str::pascal(Str::singular($table));
 
             // Create the namespace
             $namespace = new PhpNamespace(
