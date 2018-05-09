@@ -24,7 +24,7 @@
         "php": "^7.0",
         "aura/sqlschema": "^2.0",
         "nette/php-generator": "^3.0",
-        "ronanchilvers/utility": "^1.0",
+        "ronanchilvers/utility": "^1.1",
         "clancats/hydrahon": "^1.1",
         "symfony/console": "^3.4",
         "symfony/finder": "^3.4",
