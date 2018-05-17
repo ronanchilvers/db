@@ -155,10 +155,7 @@ abstract class Model
     public function __call($method, $args)
     {
         if (0 === strpos($method, 'get') || 0 === strpos($method, 'set')) {
-            $attribute = Str::snake(
-                $this->prefix(mb_substr($method, 3))
-            );
-
+            $attribute = mb_substr($method, 3);
             switch (substr($method, 0, 3)) {
                 case 'set':
                     return $this->setData($attribute, $args[0]);
@@ -175,6 +172,45 @@ abstract class Model
                 $method
             )
         );
+    }
+
+    /**
+     * Magic property isset
+     *
+     * @param string $attribute
+     * @return bool
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function __isset($attribute)
+    {
+        $attribute = Str::snake(
+            $this->prefix($attribute)
+        );
+        return isset($this->data[$attribute]);
+    }
+
+    /**
+     * Magic property getter
+     *
+     * @param string $attribute
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function __get($attribute)
+    {
+        return $this->getData($attribute);
+    }
+
+    /**
+     * Magic property setter
+     *
+     * @param string $attribute
+     * @param mixed $value
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function __set($attribute, $value)
+    {
+        $this->setData($attribute);
     }
 
     /**
@@ -308,27 +344,29 @@ abstract class Model
     /**
      * Set a data attribute on this model
      *
-     * @param string $key
+     * @param string $attribute
      * @param mixed $value
      * @return static
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function setData($key, $value)
+    protected function setData($attribute, $value)
     {
-        $key = $this->prefix($key);
-        if (!isset($this->columns[$key])) {
+        $attribute = Str::snake(
+            $this->prefix($attribute)
+        );
+        if (!isset($this->columns[$attribute])) {
             throw new RuntimeException(
-                sprintf('Unknown field %s', $key)
+                sprintf('Unknown field %s', $attribute)
             );
         }
-        if (static::$primaryKey == $key) {
+        if (static::$primaryKey == $attribute) {
             throw new RuntimeException(
-                sprintf('Invalid attempt to overwrite primary key column %s', $key)
+                sprintf('Invalid attempt to overwrite primary key column %s', $attribute)
             );
         }
 
         // Auto mutation
-        if (in_array($key, $this->datetimeColumns)) {
+        if (in_array($attribute, $this->datetimeColumns)) {
             if (!$value instanceof DateTime) {
                 $value = date_create($value);
             }
@@ -339,7 +377,7 @@ abstract class Model
             }
         }
 
-        $this->data[$key] = $value;
+        $this->data[$attribute] = $value;
 
         return $this;
     }
@@ -347,18 +385,20 @@ abstract class Model
     /**
      * Get a data attribute for this model
      *
-     * @param string $key
+     * @param string $attribute
      * @return mixed
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function getData($key)
+    protected function getData($attribute)
     {
-        $key = $this->prefix($key);
-        if (isset($this->data[$key])) {
-            $data = $this->data[$key];
+        $attribute = Str::snake(
+            $this->prefix($attribute)
+        );
+        if (isset($this->data[$attribute])) {
+            $data = $this->data[$attribute];
 
             // Auto mutations
-            if (in_array($key, $this->datetimeColumns)) {
+            if (in_array($attribute, $this->datetimeColumns)) {
                 if (false === $data = date_create($data)) {
                     $data = null;
                 }
