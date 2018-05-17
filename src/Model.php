@@ -152,27 +152,27 @@ abstract class Model
     public function __construct()
     {}
 
-    public function __call($method, $args)
-    {
-        if (0 === strpos($method, 'get') || 0 === strpos($method, 'set')) {
-            $attribute = mb_substr($method, 3);
-            switch (substr($method, 0, 3)) {
-                case 'set':
-                    return $this->setData($attribute, $args[0]);
+    // public function __call($method, $args)
+    // {
+    //     if (0 === strpos($method, 'get') || 0 === strpos($method, 'set')) {
+    //         $attribute = mb_substr($method, 3);
+    //         switch (substr($method, 0, 3)) {
+    //             case 'set':
+    //                 return $this->setData($attribute, $args[0]);
 
-                case 'get':
-                    return $this->getData($attribute);
-            }
-        }
+    //             case 'get':
+    //                 return $this->getData($attribute);
+    //         }
+    //     }
 
-        throw new RuntimeException(
-            sprintf(
-                'Undefined method %s::%s()',
-                get_called_class(),
-                $method
-            )
-        );
-    }
+    //     throw new RuntimeException(
+    //         sprintf(
+    //             'Undefined method %s::%s()',
+    //             get_called_class(),
+    //             $method
+    //         )
+    //     );
+    // }
 
     /**
      * Magic property isset
@@ -351,22 +351,24 @@ abstract class Model
      */
     protected function setData($attribute, $value)
     {
-        $attribute = Str::snake(
-            $this->prefix($attribute)
-        );
-        if (!isset($this->columns[$attribute])) {
+        $attribute = Str::snake($attribute);
+        $attributePrefixed = $this->prefix($attribute);
+        if (!isset($this->columns[$attributePrefixed])) {
             throw new RuntimeException(
-                sprintf('Unknown field %s', $attribute)
+                sprintf('Unknown field %s', $attributePrefixed)
             );
         }
-        if (static::$primaryKey == $attribute) {
+        if (static::$primaryKey == $attributePrefixed) {
             throw new RuntimeException(
-                sprintf('Invalid attempt to overwrite primary key column %s', $attribute)
+                sprintf('Invalid attempt to overwrite primary key column %s', $attributePrefixed)
             );
         }
 
         // Auto mutation
-        if (in_array($attribute, $this->datetimeColumns)) {
+        $mutator = 'mutate' . Str::pascal($attribute);
+        if (is_callable([$this, $setter])) {
+            $value = $this->$mutator($value);
+        } else if (in_array($attributePrefixed, $this->datetimeColumns)) {
             if (!$value instanceof DateTime) {
                 $value = date_create($value);
             }
@@ -377,7 +379,7 @@ abstract class Model
             }
         }
 
-        $this->data[$attribute] = $value;
+        $this->data[$attributePrefixed] = $value;
 
         return $this;
     }
@@ -391,14 +393,16 @@ abstract class Model
      */
     protected function getData($attribute)
     {
-        $attribute = Str::snake(
-            $this->prefix($attribute)
-        );
-        if (isset($this->data[$attribute])) {
-            $data = $this->data[$attribute];
+        $attribute = Str::snake($attribute);
+        $attributePrefixed = $this->prefix($attribute);
+        if (isset($this->data[$attributePrefixed])) {
+            $data = $this->data[$attributePrefixed];
 
             // Auto mutations
-            if (in_array($attribute, $this->datetimeColumns)) {
+            $getter = 'get' . Str::pascal($attribute);
+            if (is_callable([$this, $getter])) {
+                return $this->$getter($data);
+            } else if (in_array($attributePrefixed, $this->datetimeColumns)) {
                 if (false === $data = date_create($data)) {
                     $data = null;
                 }
@@ -417,7 +421,7 @@ abstract class Model
      * @return string
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function prefix($string)
+    public function prefix($string)
     {
         $prefix = $this->columnPrefix;
         if (!empty($prefix)) {
@@ -437,7 +441,7 @@ abstract class Model
      * @return string
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function unprefix($string)
+    public function unprefix($string)
     {
         if (!empty($this->columnPrefix) && 0 === strpos($string, $this->columnPrefix)) {
             return substr($string, strlen($this->columnPrefix) + 1);
