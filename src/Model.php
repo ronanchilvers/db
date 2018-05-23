@@ -210,7 +210,7 @@ abstract class Model
      */
     public function __set($attribute, $value)
     {
-        $this->setData($attribute);
+        $this->setData($attribute, $value);
     }
 
     /**
@@ -366,7 +366,7 @@ abstract class Model
 
         // Auto mutation
         $mutator = 'mutate' . Str::pascal($attribute);
-        if (is_callable([$this, $setter])) {
+        if (is_callable([$this, $mutator])) {
             $value = $this->$mutator($value);
         } else if (in_array($attributePrefixed, $this->datetimeColumns)) {
             if (!$value instanceof DateTime) {
