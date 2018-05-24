@@ -57,6 +57,19 @@ class QueryBuilder
     }
 
     /**
+     * Get the first record in the table
+     *
+     * @return \Ronanchilvers\Db\Model|null
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function first()
+    {
+        $modelClass = $this->modelClass;
+        return static::select()
+            ->first($modelClass::$primaryKey);
+    }
+
+    /**
      * Get a single record by id
      *
      * @param mixed $id
