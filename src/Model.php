@@ -214,6 +214,23 @@ abstract class Model
     }
 
     /**
+     * Set the model data from an array
+     *
+     * @param array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function setFromArray(array $data)
+    {
+        foreach ($data as $attribute, $value) {
+            try {
+                $this->setData($attribute, $value);
+            } catch (RuntimeException $ex) {
+                continue;
+            }
+        }
+    }
+
+    /**
      * Get a new query builder for this model
      *
      * @return Ronanchilvers\Db\QueryBuilder
