@@ -261,20 +261,6 @@ abstract class Model
         {
             return false;
         }
-        foreach ($this->columns as $column => $params) {
-            if ($column === static::$primaryKey) {
-                continue;
-            }
-            if (
-                true == $params['required'] &&
-                (
-                    !isset($this->data[$column]) ||
-                    empty($this->data[$column])
-                )
-            ) {
-                return false;
-            }
-        }
         if (true === isset($data[static::$primaryKey])) {
             if (false === static::notifyObservers($this, 'updating'))
             {
