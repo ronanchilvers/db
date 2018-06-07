@@ -214,6 +214,24 @@ abstract class Model
     }
 
     /**
+     * Get the property names for this model
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function getPropertyNames()
+    {
+        $names = array_keys($this->data);
+        $index = array_search(static::$primaryKey, $names);
+        unset($names[$index]);
+        $names = array_map(function (&$name) {
+            return $this->unprefix($name);
+        }, $names);
+
+        return $names;
+    }
+
+    /**
      * Set the model data from an array
      *
      * @param array
@@ -297,7 +315,6 @@ abstract class Model
             $query->values(
                 $this->data
             );
-
             if (true !== $query->execute()) {
                 return false;
             }
