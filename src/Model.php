@@ -221,7 +221,7 @@ abstract class Model
      */
     public function setFromArray(array $data)
     {
-        foreach ($data as $attribute, $value) {
+        foreach ($data as $attribute => $value) {
             try {
                 $this->setData($attribute, $value);
             } catch (RuntimeException $ex) {
