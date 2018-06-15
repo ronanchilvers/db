@@ -349,7 +349,7 @@ abstract class Model
             ->where(
                 static::$primaryKey,
                 '=',
-                $this->data[$pKey]
+                $this->data[static::$primaryKey]
             )
             ;
         if (false === $query->execute()) {
