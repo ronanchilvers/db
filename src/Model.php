@@ -214,6 +214,25 @@ abstract class Model
     }
 
     /**
+     * Get additional data stored on the model that doesn't relate directly to a column
+     *
+     * This is to allow for cases where you load calculated data with a query and want to
+     * pull it out of the model later.
+     *
+     * @param string $key
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function getAdditional($key)
+    {
+        if (!isset($this->columns[$key]) && isset($this->data[$key])) {
+            return $this->data[$key];
+        }
+
+        return null;
+    }
+
+    /**
      * Get the property names for this model
      *
      * @return array
