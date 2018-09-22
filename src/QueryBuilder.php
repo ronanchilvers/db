@@ -105,6 +105,23 @@ class QueryBuilder
     }
 
     /**
+     * Select using a raw SQL statement
+     *
+     * @param
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function selectSql($sql, $params = [])
+    {
+        $callback = $this->generateCallback();
+
+        return $callback(
+            null,
+            $sql,
+            $params
+        );
+    }
+
+    /**
      * Create an insert query
      *
      * @return \ClanCats\Hydrahon\Query\Sql\Insert
@@ -184,7 +201,7 @@ class QueryBuilder
                     implode(' : ', $stmt->errorInfo())
                 );
             }
-            if (!$query instanceof FetchableInterface) {
+            if ($query instanceof BaseQuery && !$query instanceof FetchableInterface) {
                 return $result;
             }
 
