@@ -331,8 +331,10 @@ abstract class Model
             }
             // Insert
             $query = $queryBuilder->insert();
+            $data = $this->data;
+            unset($data[static::$primaryKey]);
             $query->values(
-                $this->data
+                $data
             );
             if (true !== $query->execute()) {
                 return false;
