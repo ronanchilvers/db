@@ -7,6 +7,8 @@ use ClanCats\Hydrahon\Query\Sql\FetchableInterface;
 use ClanCats\Hydrahon\Query\Sql\Insert;
 use ClanCats\Hydrahon\Query\Sql\Select;
 use ClanCats\Hydrahon\Query\Sql\Update;
+use Closure;
+use Exception;
 use PDO;
 use Ronanchilvers\Db\Model\Hydrator;
 use Ronanchilvers\Utility\Collection;
@@ -43,6 +45,33 @@ class QueryBuilder
         $this->pdo = $pdo;
         $this->modelClass = $modelClass;
         $this->query = null;
+    }
+
+    /**
+     * Automated transaction handling
+     *
+     * @param Closure
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function transaction($closure)
+    {
+        $pdo = $this->pdo;
+        try {
+            $pdo->beginTransaction();
+            $result = $closure();
+
+            if (false === $result) {
+                $pdo->rollback();
+            } else {
+                $pdo->commit();
+            }
+
+            return $result;
+        }
+        catch (Exception $ex) {
+            $pdo->rollback();
+            throw $ex;
+        }
     }
 
     /**
