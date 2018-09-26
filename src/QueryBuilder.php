@@ -221,6 +221,7 @@ class QueryBuilder
     protected function generateCallback()
     {
         return function ($query, $sql, $params) {
+            $sql = trim($sql);
             $stmt = $this->pdo->prepare(
                 $sql
             );
@@ -230,7 +231,8 @@ class QueryBuilder
                     implode(' : ', $stmt->errorInfo())
                 );
             }
-            if ($query instanceof BaseQuery && !$query instanceof FetchableInterface) {
+
+            if ('select' !== strtolower(substr($sql, 0, 6))) {
                 return $result;
             }
 
