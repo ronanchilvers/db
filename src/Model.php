@@ -186,7 +186,8 @@ abstract class Model
         $attribute = Str::snake(
             $this->prefix($attribute)
         );
-        return isset($this->data[$attribute]);
+
+        return array_key_exists($attribute, $this->data);
     }
 
     /**
