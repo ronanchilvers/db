@@ -252,6 +252,17 @@ abstract class Model
     }
 
     /**
+     * Get the data array for this model
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function getDataArray()
+    {
+        return $this->data;
+    }
+
+    /**
      * Set the model data from an array
      *
      * @param array
