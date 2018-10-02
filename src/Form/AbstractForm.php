@@ -118,7 +118,11 @@ use Valitron\Validator;
         }
 
         // Validate the data
-        $validator = new Validator($this->data);
+        $data = array_merge(
+            $this->model->getDataArray(),
+            $this->data
+        );
+        $validator = new Validator($data);
         $validator->rules($rules);
         if ($validator->validate()) {
             return true;
