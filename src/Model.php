@@ -7,13 +7,14 @@ use PDO;
 use Ronanchilvers\Db\Model\ObserverInterface;
 use Ronanchilvers\Utility\Str;
 use RuntimeException;
+use Serializable;
 
 /**
  * Base model class for all models
  *
  * @author Ronan Chilvers <ronan@d3r.com>
  */
-abstract class Model
+abstract class Model implements Serializable
 {
     /**
      * @var string
@@ -501,5 +502,27 @@ abstract class Model
         }
 
         return $string;
+    }
+
+    /**
+     * Serialize the data array
+     *
+     * @return string
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function serialize()
+    {
+        return serialize($this->data);
+    }
+
+    /**
+     * Unserialize the data array
+     *
+     * @param string $serialized
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function unserialize($serialized)
+    {
+        $this->data = unserialize($serialized);
     }
 }
