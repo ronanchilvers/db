@@ -368,7 +368,7 @@ abstract class Model implements Serializable
      * @return boolean
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function delete()
+    public function destroy()
     {
         if (!isset($this->data[static::$primaryKey]) || empty($this->data[static::$primaryKey])) {
             throw new RuntimeException(
