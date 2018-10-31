@@ -139,8 +139,18 @@ class QueryBuilder
      * @param
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function selectSql($sql, $params = [])
+    public function selectSql($sql, $params = [], $page = null, $perPage = 20)
     {
+        if (!is_null($page)) {
+            $page   = (int) $page;
+            if ($page < 0) {
+                $page = 0;
+            }
+            $offset = $perPage * $page;
+            $limit  = $perPage;
+
+            $sql .= " LIMIT {$limit} OFFSET {$offset}";
+        }
         $callback = $this->generateCallback();
 
         return $callback(
