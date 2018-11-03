@@ -18,27 +18,39 @@ use Valitron\Validator;
     /**
      * @var Ronanchilvers\Db\Model
      */
-    protected $model;
+    private $model;
 
     /**
      * @var array
      */
-    protected $data = [];
+    private $data = [];
 
     /**
      * @var array
      */
-    protected $errors = [];
+    private $errors = [];
+
+    /**
+     * @var array
+     */
+    protected $fields = [];
+
+    /**
+     * @var array
+     */
+    protected $rules = [];
 
     /**
      * Class constructor
      *
-     * @param array $data
+     * @param Ronanchilvers\Db\Model $model The model to use
+     * @param array $fields Fields to validate
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function __construct(Model $model)
+    public function __construct(Model $model, array $fields)
     {
         $this->model = $model;
+        $this->fields = array_combine(array_keys($fields), $fields);
         $this->errors = [];
     }
 
@@ -84,9 +96,11 @@ use Valitron\Validator;
     {
         $properties = $this->model->getPropertyNames();
         $properties = array_combine($properties, $properties);
+        $fields     = array_combine($this->fields, $this->fields);
         $data = array_intersect_key(
             $data,
-            $properties
+            $properties,
+            $fields
         );
         $this->data = $data;
     }
@@ -96,17 +110,33 @@ use Valitron\Validator;
      *
      * This method MUST return an array of rules
      *
+     * @param array $fields
      * @return array
      * @author Ronan Chilvers <ronan@d3r.com>
      */
     protected function configure(): array
     {
-        return [];
+        $rules = [];
+        foreach ($this->rules as $ruleName => $ruleFields) {
+            $rule = [];
+            foreach ($ruleFields as $fieldRule) {
+                $fieldName = (is_array($fieldRule)) ? $fieldRule[0] : $fieldRule;
+                if (0 == count($this->fields) || in_array($fieldName, $this->fields)) {
+                    $rule[] = $fieldRule;
+                }
+            }
+            if (0 < count($rule)) {
+                $rules[$ruleName] = $rule;
+            }
+        }
+
+        return $rules;
     }
 
     /**
      * {@inheritdoc}
      *
+     * @param array $fields Fields that we are interested in
      * @return boolean
      * @author Ronan Chilvers <ronan@d3r.com>
      */
