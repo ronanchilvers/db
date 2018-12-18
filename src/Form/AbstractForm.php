@@ -94,43 +94,12 @@ use Valitron\Validator;
      */
     public function setData($data)
     {
-        $properties = $this->model->getPropertyNames();
-        $properties = array_combine($properties, $properties);
-        $fields     = array_combine($this->fields, $this->fields);
-        $data = array_intersect_key(
+        $fields = array_combine($this->fields, $this->fields);
+        $data   = array_intersect_key(
             $data,
-            $properties,
             $fields
         );
         $this->data = $data;
-    }
-
-    /**
-     * Configure validation rules
-     *
-     * This method MUST return an array of rules
-     *
-     * @param array $fields
-     * @return array
-     * @author Ronan Chilvers <ronan@d3r.com>
-     */
-    protected function configure(): array
-    {
-        $rules = [];
-        foreach ($this->rules as $ruleName => $ruleFields) {
-            $rule = [];
-            foreach ($ruleFields as $fieldRule) {
-                $fieldName = (is_array($fieldRule)) ? $fieldRule[0] : $fieldRule;
-                if (0 == count($this->fields) || in_array($fieldName, $this->fields)) {
-                    $rule[] = $fieldRule;
-                }
-            }
-            if (0 < count($rule)) {
-                $rules[$ruleName] = $rule;
-            }
-        }
-
-        return $rules;
     }
 
     /**
@@ -154,6 +123,7 @@ use Valitron\Validator;
         );
         $validator = new Validator($data);
         $validator->rules($rules);
+        $this->beforeValidate($validator);
         if ($validator->validate()) {
             return true;
         }
@@ -197,9 +167,59 @@ use Valitron\Validator;
      */
     public function model()
     {
-        if (!empty($this->data)) {
-            $this->model->setFromArray($this->data);
+        $data = $this->getModelData();
+        if (!empty($data)) {
+            $this->model->setFromArray($data);
         }
+
         return $this->model;
+    }
+
+    /**
+     * Before validate hook
+     *
+     * @param Valitron\Validator $validator
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function beforeValidate(Validator $validator)
+    {}
+
+    /**
+     * Get the model data for this form
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function getModelData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * Configure validation rules
+     *
+     * This method MUST return an array of rules
+     *
+     * @param array $fields
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    protected function configure(): array
+    {
+        $rules = [];
+        foreach ($this->rules as $ruleName => $ruleFields) {
+            $rule = [];
+            foreach ($ruleFields as $fieldRule) {
+                $fieldName = (is_array($fieldRule)) ? $fieldRule[0] : $fieldRule;
+                if (0 == count($this->fields) || in_array($fieldName, $this->fields)) {
+                    $rule[] = $fieldRule;
+                }
+            }
+            if (0 < count($rule)) {
+                $rules[$ruleName] = $rule;
+            }
+        }
+
+        return $rules;
     }
  }
