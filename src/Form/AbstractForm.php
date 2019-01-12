@@ -23,7 +23,7 @@ use Valitron\Validator;
     /**
      * @var array
      */
-    private $data = [];
+    protected $data = [];
 
     /**
      * @var array
@@ -52,6 +52,21 @@ use Valitron\Validator;
         $this->model = $model;
         $this->fields = array_combine(array_keys($fields), $fields);
         $this->errors = [];
+    }
+
+    /**
+     * Magic call to pass method calls to the wrapped model
+     *
+     * @param string $method
+     * @param array $args
+     * @return mixed
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function __call($method, $args)
+    {
+        if (method_exists($this->model, $method)) {
+            return call_user_func_array([$this->model, $method], $args);
+        }
     }
 
     /**
@@ -165,7 +180,7 @@ use Valitron\Validator;
      * @return Ronanchilvers\Db\Model
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    public function model()
+    public function model(): Model
     {
         $data = $this->getModelData();
         if (!empty($data)) {
@@ -173,6 +188,17 @@ use Valitron\Validator;
         }
 
         return $this->model;
+    }
+
+    /**
+     * Get the data for this form
+     *
+     * @return array
+     * @author Ronan Chilvers <ronan@d3r.com>
+     */
+    public function data(): array
+    {
+        return $this->getModelData();
     }
 
     /**
@@ -190,7 +216,7 @@ use Valitron\Validator;
      * @return array
      * @author Ronan Chilvers <ronan@d3r.com>
      */
-    protected function getModelData()
+    protected function getModelData(): array
     {
         return $this->data;
     }
